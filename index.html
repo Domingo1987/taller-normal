@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Práctica de distribución Normal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Plan: mesa de estudio. Columna principal (práctica / zonas / banco) + "mesa de trabajo" fija a la derecha con la lectura de tabla siempre visible. */
+:root{
+  --bg:#edf0f3; --surface:#ffffff; --surface-2:#f5f7f9; --ink:#141e29; --muted:#566373; --line:#d6dce3;
+  --accent:#1c5bc9; --accent-ink:#ffffff; --accent-soft:#dde7f9;
+  --sel:#e39a1e; --sel-soft:#fcefd6; --sel-strong:#f7d58f;
+  --good:#1d8552; --good-soft:#dcf1e5; --bad:#bf3636; --bad-soft:#f7e0e0;
+  --area:rgba(28,91,201,.26); --area-2:rgba(227,154,30,.32); --curve:#141e29;
+  --font-display:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+  --r:10px; --shadow:0 1px 2px rgba(20,30,41,.06),0 4px 14px rgba(20,30,41,.05);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e141b; --surface:#161f29; --surface-2:#1c2733; --ink:#e4ebf2; --muted:#98a6b5; --line:#2a3745;
+    --accent:#6b9dff; --accent-ink:#0b1320; --accent-soft:#1b2c4b;
+    --sel:#f2b24a; --sel-soft:#33291a; --sel-strong:#5a4318;
+    --good:#4cc188; --good-soft:#163227; --bad:#f07a7a; --bad-soft:#3a1d20;
+    --area:rgba(107,157,255,.32); --area-2:rgba(242,178,74,.34); --curve:#e4ebf2;
+    --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e141b; --surface:#161f29; --surface-2:#1c2733; --ink:#e4ebf2; --muted:#98a6b5; --line:#2a3745;
+  --accent:#6b9dff; --accent-ink:#0b1320; --accent-soft:#1b2c4b;
+  --sel:#f2b24a; --sel-soft:#33291a; --sel-strong:#5a4318;
+  --good:#4cc188; --good-soft:#163227; --bad:#f07a7a; --bad-soft:#3a1d20;
+  --area:rgba(107,157,255,.32); --area-2:rgba(242,178,74,.34); --curve:#e4ebf2;
+  --shadow:0 1px 2px rgba(0,0,0,.3); color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--font-body);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;text-wrap:balance;margin:0;line-height:1.15}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+[hidden]{display:none!important}
+
+/* ---------- header ---------- */
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px;padding:14px 20px;background:var(--surface);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.brand svg{flex:none}
+.brand h1{font-size:20px}
+.brand p{margin:0;font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;gap:4px;margin-left:auto;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px;flex-wrap:wrap}
+.tabs a{padding:6px 14px;border-radius:999px;text-decoration:none;color:var(--muted);font-weight:500;font-size:14px}
+.tabs a[aria-current="page"]{background:var(--accent);color:var(--accent-ink)}
+.tabs a:not([aria-current="page"]):hover{color:var(--ink)}
+
+/* ---------- layout ---------- */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 548px;gap:20px;padding:20px;max-width:1500px;margin:0 auto;align-items:start}
+.desk{position:sticky;top:12px;display:flex;flex-direction:column;gap:10px;max-height:calc(100vh - 24px);min-height:0}
+@media (max-width:1060px){
+  .layout{grid-template-columns:1fr;padding:16px}
+  .desk{position:static;max-height:none}
+}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.eyebrow{font-family:var(--font-display);font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 12px;font-size:14px;font-weight:500}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--accent);padding:4px 8px}
+.btn.ghost:hover{background:var(--accent-soft)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface-2)}
+.seg button{border:0;background:transparent;padding:6px 12px;font-size:14px;color:var(--muted);border-right:1px solid var(--line)}
+.seg button:last-child{border-right:0}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.seg#zZona{flex-wrap:wrap}
+.seg.small button{padding:2px 9px;font-size:13px}
+.field{display:flex;flex-direction:column;gap:3px;font-size:13px;color:var(--muted)}
+.field input,.field select{border:1px solid var(--line);background:var(--surface);border-radius:7px;padding:5px 8px;color:var(--ink);font-size:14px;min-width:0}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;color:var(--muted)}
+
+/* ---------- desk: readout ---------- */
+.readout{padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:4px 12px;border-color:var(--sel)}
+.readout .ro-head{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.ro-main{font-family:var(--font-mono);font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;line-height:1.25;min-height:30px;align-self:center}
+.ro-main.empty{font-family:var(--font-body);font-size:15px;font-weight:400;color:var(--muted)}
+.ro-sub{font-size:13px;color:var(--muted);grid-column:1}
+.ro-curve{grid-row:2/4;grid-column:2;width:132px;height:66px}
+.ro-rel{grid-column:1/-1;font-family:var(--font-mono);font-size:13px;display:grid;gap:1px;padding-top:6px;border-top:1px dashed var(--line);margin-top:4px}
+.ro-actions{grid-column:1/-1;display:flex;gap:8px 14px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.pins{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px}
+.pin{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--surface-2);font-family:var(--font-mono);font-size:12.5px;overflow:hidden}
+.pin button{border:0;background:transparent;padding:3px 9px}
+.pin button.to-calc:hover{background:var(--accent-soft)}
+.pin button.x{padding:3px 8px;color:var(--muted);border-left:1px solid var(--line)}
+.pin button.x:hover{color:var(--bad)}
+
+/* ---------- desk: tools ---------- */
+.tools{display:flex;flex-direction:column;min-height:0;flex:1}
+.tools-head{display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--line);gap:8px;flex-wrap:wrap}
+.tool-body{min-height:0;flex:1;display:flex;flex-direction:column}
+.find{display:flex;gap:6px;align-items:end;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.find .field{flex:1;min-width:150px}
+.find-msg{padding:6px 12px 0;font-size:13px;color:var(--muted);min-height:0}
+.tablewrap{overflow:auto;min-height:220px;flex:1;position:relative}
+@media (max-width:1060px){.tablewrap{max-height:62vh}}
+table.zt{border-collapse:separate;border-spacing:0;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:12px;width:100%}
+.zt th,.zt td{padding:0;text-align:center;border-bottom:1px solid var(--line)}
+.zt thead th{position:sticky;top:0;background:var(--surface-2);z-index:2;border-bottom:1px solid var(--line)}
+.zt thead th.corner{left:0;z-index:3;font-family:var(--font-display);font-size:14px;color:var(--muted)}
+.zt tbody th{position:sticky;left:0;background:var(--surface-2);z-index:1;border-right:1px solid var(--line)}
+.zt .hb{display:block;width:100%;border:0;background:transparent;padding:5px 2px;font-family:var(--font-mono);font-weight:600;font-size:12px;color:var(--ink)}
+.zt .hb:hover{background:var(--sel-soft)}
+.zt td{padding:4px 2px;cursor:pointer;user-select:none;white-space:nowrap}
+.zt td:hover{background:var(--accent-soft)}
+.zt tr.rsel td,.zt td.csel{background:var(--sel-soft)}
+.zt tr.rsel th .hb,.zt th.csel .hb{background:var(--sel);color:#1a1205}
+.zt td.cell{background:var(--sel)!important;color:#1a1205;font-weight:600;box-shadow:inset 0 0 0 2px #1a1205}
+.zt td.found{outline:2px dashed var(--accent);outline-offset:-3px}
+.zt td.errata{position:relative}
+.zt td.errata::after{content:"";position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--bad)}
+.zt tbody tr:nth-child(5n) td,.zt tbody tr:nth-child(5n) th{border-bottom-color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);padding:8px 12px;border-top:1px solid var(--line);margin:0}
+.note b{color:var(--ink);font-weight:600}
+
+/* calculator */
+.calc{padding:12px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.calc-screen{border:1px solid var(--line);border-radius:8px;background:var(--surface-2);padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.calc-screen input{border:0;background:transparent;font-family:var(--font-mono);font-size:18px;width:100%;padding:2px 0;outline:none}
+.calc-res{font-family:var(--font-mono);font-size:24px;font-weight:600;text-align:right;min-height:32px;font-variant-numeric:tabular-nums}
+.calc-res.err{font-family:var(--font-body);font-size:13.5px;font-weight:500;color:var(--bad)}
+.calc-res.preview{color:var(--muted)}
+.keys{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.keys button{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:9px 0;font-family:var(--font-mono);font-size:16px}
+.keys button:hover{border-color:var(--accent)}
+.keys .op{background:var(--surface-2)}
+.keys .eq{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.keys .fn{font-size:14px}
+.hist{display:flex;flex-direction:column;gap:2px;font-family:var(--font-mono);font-size:13px}
+.hist button{display:flex;justify-content:space-between;gap:10px;border:0;background:transparent;padding:4px 6px;border-radius:6px;text-align:left}
+.hist button:hover{background:var(--accent-soft)}
+.hist .h-e{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* mobile bottom readout */
+.robar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--sel);color:#1a1205;font-family:var(--font-mono);font-weight:600;font-size:17px;padding:10px 16px;display:none;justify-content:space-between;align-items:center;gap:10px;border:0;width:100%;text-align:left}
+@media (max-width:1060px){ .robar.on{display:flex} body.has-bar{padding-bottom:52px} }
+
+/* ---------- views ---------- */
+.view{display:flex;flex-direction:column;gap:16px;min-width:0}
+.stats{display:flex;flex-wrap:wrap;gap:10px 20px;align-items:center;padding:12px 16px}
+.stat b{font-family:var(--font-display);font-size:22px;font-weight:600;display:block;line-height:1}
+.stat span{font-size:12.5px;color:var(--muted)}
+.bar{flex:1;min-width:120px;height:8px;background:var(--surface-2);border-radius:99px;overflow:hidden;border:1px solid var(--line);display:flex}
+.bar i{display:block;height:100%}
+.bar .g{background:var(--good)} .bar .b{background:var(--bad)}
+.picker{display:flex;flex-direction:column;gap:8px}
+.filters{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:13px;color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+.exlist{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.exbtn{flex:none;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:7px 11px;text-align:left;display:flex;flex-direction:column;gap:4px;min-width:128px}
+.exbtn[aria-current="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.exbtn .t{font-weight:600;font-size:13.5px;white-space:nowrap}
+.dots{display:flex;gap:3px}
+.dots i{width:7px;height:7px;border-radius:50%;background:var(--line)}
+.dots i.ok{background:var(--good)} .dots i.no{background:var(--bad)}
+.ex{padding:20px 22px;display:flex;flex-direction:column;gap:18px}
+.ex-head{display:flex;justify-content:space-between;align-items:start;gap:12px;flex-wrap:wrap}
+.ex-head h2{font-size:24px}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.tag{font-size:12px;border-radius:5px;padding:1px 7px;background:var(--surface-2);border:1px solid var(--line);color:var(--muted)}
+.statement{font-size:16px;max-width:70ch;margin:0;padding:12px 14px;border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 8px 8px 0}
+.q{display:flex;flex-direction:column;gap:10px;padding-top:16px;border-top:1px solid var(--line)}
+.q-text{display:flex;gap:10px;align-items:baseline}
+.q-text .qid{font-family:var(--font-display);font-weight:700;font-size:17px;color:var(--accent);flex:none}
+.q-text p{margin:0;max-width:68ch}
+.opts{display:grid;gap:8px;max-width:640px}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:9px 12px}
+.opt:hover:not(:disabled){border-color:var(--accent);background:var(--accent-soft)}
+.opt .ol{flex:none;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-display);font-weight:700;background:var(--surface-2);border:1px solid var(--line)}
+.opt .ot{font-variant-numeric:tabular-nums}
+.opt:disabled{cursor:default}
+.opt.right{border-color:var(--good);background:var(--good-soft)}
+.opt.right .ol{background:var(--good);color:#fff;border-color:var(--good)}
+.opt.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.opt.wrong .ol{background:var(--bad);color:#fff;border-color:var(--bad)}
+.q-foot{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.fb{font-weight:600;font-size:14px;padding:2px 10px;border-radius:6px}
+.fb.ok{color:var(--good);background:var(--good-soft)} .fb.no{color:var(--bad);background:var(--bad-soft)}
+.pista{margin:0;font-size:14px;padding:8px 12px;border-radius:8px;background:var(--sel-soft);max-width:68ch}
+.resol{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px 18px;align-items:start;padding:12px 14px;border:1px dashed var(--line);border-radius:9px}
+.resol ol{margin:0;padding-left:20px;display:grid;gap:4px;font-variant-numeric:tabular-nums}
+.resol svg{width:260px;max-width:100%}
+@media (max-width:640px){.resol{grid-template-columns:1fr}}
+.qgraph svg{width:100%;max-width:520px;display:block}
+.nav{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+
+/* curve svg */
+.cv-curve{fill:none;stroke:var(--curve);stroke-width:2}
+.cv-area{fill:var(--area)}
+.cv-axis{stroke:var(--muted);stroke-width:1}
+.cv-tick{stroke:var(--muted);stroke-width:1}
+.cv-lab{fill:var(--muted);font:12px var(--font-mono)}
+.cv-lab.z{font-size:10.5px;opacity:.85}
+.cv-bound{stroke:var(--accent);stroke-width:1.5;stroke-dasharray:4 3}
+.cv-blab{fill:var(--accent);font:600 12.5px var(--font-mono)}
+.cv-pillbg{fill:var(--surface);stroke:var(--accent);stroke-width:1}
+.cv-knob{fill:var(--accent);stroke:var(--surface);stroke-width:2;cursor:ew-resize}
+.cv-hit{fill:transparent;cursor:ew-resize}
+.cv-mean{stroke:var(--muted);stroke-width:1;stroke-dasharray:2 3}
+.cv-bg{fill:transparent}
+
+/* zones */
+.zpanel{padding:18px 20px;display:flex;flex-direction:column;gap:14px}
+.zrow{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:end}
+.zrow .field input{width:96px}
+.zrow .field input.v{width:52px}
+.zsvg{width:100%;height:auto;display:block;touch-action:none;user-select:none}
+.zread{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px 14px;align-items:baseline;padding:14px 16px;border-radius:9px;background:var(--surface-2);border:1px solid var(--line)}
+.zread dt{font-size:13px;color:var(--muted)}
+.zread dd{margin:0;font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-size:15px}
+.znot{font-family:var(--font-mono);font-size:20px;font-weight:600;border:1px solid var(--line);border-radius:8px;padding:6px 10px;background:var(--surface);width:100%;max-width:520px}
+.znot.bad{border-color:var(--bad)}
+.zerr{font-family:var(--font-body)!important;font-size:13px!important;color:var(--bad)}
+.reto{padding:14px 16px;border:1px solid var(--sel);border-radius:9px;background:var(--sel-soft);display:flex;flex-direction:column;gap:10px}
+.reto-prompt{margin:0;font-size:16px}
+.reto-prompt .mono{font-weight:600;font-size:18px}
+.reto-opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px}
+.reto-opts .opt{font-family:var(--font-mono)}
+
+/* bank */
+.bank{padding:20px 22px;display:flex;flex-direction:column;gap:14px}
+.bank p{margin:0;max-width:72ch}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.schema{width:100%;border-collapse:collapse;font-size:13.5px}
+.schema th,.schema td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.schema th{font-family:var(--font-display);font-weight:600;color:var(--muted)}
+.schema code{font-family:var(--font-mono);font-size:12.5px}
+.scroll-x{overflow-x:auto}
+textarea.json{width:100%;min-height:180px;font-family:var(--font-mono);font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:10px;background:var(--surface-2);resize:vertical}
+pre.json{margin:0;max-height:340px;overflow:auto;font-family:var(--font-mono);font-size:12.5px;background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:10px}
+.msgs{display:grid;gap:4px;font-size:13.5px}
+.msgs .e{color:var(--bad)} .msgs .k{color:var(--good)}
+.toast{position:fixed;left:50%;bottom:70px;transform:translateX(-50%);background:var(--ink);color:var(--surface);padding:8px 14px;border-radius:8px;font-size:14px;z-index:40;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand">
+    <svg width="38" height="26" viewBox="0 0 38 26" aria-hidden="true"><path d="M1 24 C9 24 12 2 19 2 S29 24 37 24" fill="none" stroke="var(--accent)" stroke-width="2.4"/><path d="M19 2 C23 2 25 10 27 16 L27 24 L19 24 Z" fill="var(--area)"/></svg>
+    <div><h1>Distribución Normal</h1><p>Práctica estilo parcial · Introducción a la Estadística</p></div>
+  </div>
+  <nav class="tabs" aria-label="Secciones">
+    <a href="#practicar" data-view="practicar">Practicar</a>
+    <a href="#zonas" data-view="zonas">Zonas de la curva</a>
+    <a href="#banco" data-view="banco">Banco y JSON</a>
+  </nav>
+</header>
+
+<div class="layout">
+  <main>
+    <!-- PRACTICAR -->
+    <section class="view" id="v-practicar">
+      <div class="card stats" id="stats"></div>
+      <div class="picker">
+        <div class="filters" id="filters" aria-label="Filtrar por tema"></div>
+        <div class="exlist" id="exlist"></div>
+      </div>
+      <article class="card ex" id="ex"></article>
+    </section>
+
+    <!-- ZONAS -->
+    <section class="view" id="v-zonas" hidden>
+      <div class="card zpanel">
+        <div class="ex-head">
+          <div>
+            <div class="eyebrow">Interpretar zonas</div>
+            <h2>Del área a la notación, y al revés</h2>
+          </div>
+          <div class="seg" role="group" aria-label="Modo">
+            <button type="button" id="mExplorar" aria-pressed="true">Explorar</button>
+            <button type="button" id="mReto" aria-pressed="false">Reto</button>
+          </div>
+        </div>
+        <p class="muted" style="margin:0;max-width:72ch" id="zHelp">Elegí el tipo de zona y arrastrá los bordes sobre el gráfico, o escribí la notación (por ejemplo <span class="mono">P(T &gt; 165)</span>, <span class="mono">P(−1 &lt; Z &lt; 2)</span>, <span class="mono">P(|Z| &gt; 1,96)</span>) y el gráfico se sombrea solo.</p>
+        <div class="zrow" id="zParams">
+          <label class="field" for="zPreset">Distribución
+            <select id="zPreset">
+              <option value="Z|0|1">Z ∼ N(0 ; 1)</option>
+              <option value="T|150|10" selected>T ∼ N(150 ; 10) · baterías 2025</option>
+              <option value="T|200|40">T ∼ N(200 ; 40) · baterías 2024</option>
+              <option value="X|77|20">X ∼ N(77 ; 20) · Internet 2019</option>
+              <option value="X|60|10">X ∼ N(60 ; 10) · reparaciones 2018</option>
+              <option value="X|55|5">X ∼ N(55 ; 5) · calificaciones 2017</option>
+              <option value="custom">Otra…</option>
+            </select>
+          </label>
+          <label class="field" for="zVar">Variable<input id="zVar" class="v mono" value="T" maxlength="2"></label>
+          <label class="field" for="zMu">Media µ<input id="zMu" class="mono" value="150" inputmode="decimal"></label>
+          <label class="field" for="zSigma">Desvío σ<input id="zSigma" class="mono" value="10" inputmode="decimal"></label>
+        </div>
+        <div class="seg" role="group" aria-label="Tipo de zona" id="zZona"></div>
+        <svg class="zsvg" id="zSvg" viewBox="0 0 720 290" role="img" aria-label="Curva normal con la zona sombreada"></svg>
+        <div class="zrow">
+          <label class="field" for="zA">Borde a<input id="zA" class="mono" inputmode="decimal"></label>
+          <label class="field" for="zB" id="zBwrap">Borde b<input id="zB" class="mono" inputmode="decimal"></label>
+          <label class="chk" for="zShowVal"><input type="checkbox" id="zShowVal" checked> Mostrar valor con la tabla</label>
+        </div>
+        <div class="reto" id="retoBox" hidden></div>
+        <dl class="zread" id="zRead">
+          <dt><label for="zNot">Notación</label></dt>
+          <dd><input id="zNot" class="znot" spellcheck="false" autocomplete="off"><div class="zerr" id="zErr" hidden></div></dd>
+          <dt>Estandarizar</dt><dd id="zStd"></dd>
+          <dt>Con la tabla</dt><dd id="zTab"></dd>
+          <dt class="zval">Valor</dt><dd class="zval" id="zVal"></dd>
+        </dl>
+        <p class="muted" style="margin:0;font-size:13px">Los z se redondean a 2 decimales para leerlos en la tabla. Los bordes se ajustan de a 0,01 desvíos al arrastrar.</p>
+      </div>
+    </section>
+
+    <!-- BANCO -->
+    <section class="view" id="v-banco" hidden>
+      <div class="card bank">
+        <div><div class="eyebrow">Banco de ejercicios</div><h2>Descargar, editar y cargar el JSON</h2></div>
+        <p id="bankInfo"></p>
+        <div class="actions">
+          <button class="btn primary" type="button" id="dlBank">Descargar banco (.json)</button>
+          <button class="btn" type="button" id="dlTpl">Descargar plantilla (.json)</button>
+          <button class="btn" type="button" id="cpBank">Copiar JSON del banco</button>
+          <button class="btn" type="button" id="resetBank">Restaurar banco original</button>
+        </div>
+        <div class="msgs" id="dlMsg"></div>
+      </div>
+      <div class="card bank">
+        <h3>Estructura</h3>
+        <p>Un archivo tiene un objeto con <code class="mono">ejercicios</code>. Cada ejercicio tiene un enunciado general y una o más preguntas de múltiple opción.</p>
+        <div class="scroll-x">
+        <table class="schema">
+          <thead><tr><th>Campo</th><th>Tipo</th><th></th><th>Para qué sirve</th></tr></thead>
+          <tbody>
+            <tr><td><code>id</code></td><td>texto</td><td>obligatorio</td><td>Identificador único del ejercicio, por ejemplo <code>p2025-e2</code>. Si cargás uno con un id que ya existe, lo reemplaza.</td></tr>
+            <tr><td><code>fuente</code></td><td>texto</td><td>opcional</td><td>De dónde sale: «Parcial 2025 · Ej. 2».</td></tr>
+            <tr><td><code>temas</code></td><td>lista de textos</td><td>opcional</td><td>Etiquetas para filtrar: «hallar σ», «condicional»…</td></tr>
+            <tr><td><code>enunciado</code></td><td>texto</td><td>obligatorio</td><td>Datos comunes a todas las preguntas.</td></tr>
+            <tr><td><code>preguntas[].id</code></td><td>texto</td><td>obligatorio</td><td>«a», «b», «c»…</td></tr>
+            <tr><td><code>preguntas[].enunciado</code></td><td>texto</td><td>obligatorio</td><td>Lo que se pregunta.</td></tr>
+            <tr><td><code>preguntas[].opciones</code></td><td>lista</td><td>obligatorio</td><td>Objetos <code>{"id":"A","texto":"0,1574"}</code>. También se aceptan textos sueltos; se numeran A, B, C…</td></tr>
+            <tr><td><code>preguntas[].correcta</code></td><td>texto</td><td>obligatorio</td><td>El <code>id</code> de la opción correcta.</td></tr>
+            <tr><td><code>preguntas[].pista</code></td><td>texto</td><td>opcional</td><td>Se muestra con el botón «Pista».</td></tr>
+            <tr><td><code>preguntas[].resolucion</code></td><td>lista de textos</td><td>opcional</td><td>Pasos de la resolución, uno por línea.</td></tr>
+            <tr><td><code>preguntas[].grafico</code></td><td>objeto</td><td>opcional</td><td>Curva sombreada junto a la pregunta.</td></tr>
+            <tr><td><code>preguntas[].graficoResolucion</code></td><td>objeto</td><td>opcional</td><td>Curva sombreada dentro de la resolución.</td></tr>
+            <tr><td><code>grafico</code></td><td>objeto</td><td></td><td><code>{"variable":"T","media":150,"desvio":10,"zona":"entre","a":150,"b":170}</code>. <code>zona</code>: <code>menor</code> (P(X&lt;a)), <code>mayor</code> (P(X&gt;a)), <code>entre</code> (P(a&lt;X&lt;b)) o <code>fuera</code> (P(X&lt;a)+P(X&gt;b)).</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <h3>Plantilla</h3>
+        <pre class="json" id="tplPre"></pre>
+      </div>
+      <div class="card bank">
+        <h3>Cargar ejercicios</h3>
+        <p>Elegí un archivo .json o pegá el contenido. Se valida antes de cargar.</p>
+        <div class="actions" style="align-items:center">
+          <label class="btn" for="fileIn">Elegir archivo…</label>
+          <input type="file" id="fileIn" accept=".json,application/json" hidden>
+          <span class="muted" id="fileName" style="font-size:13px"></span>
+        </div>
+        <label class="field" for="pasteIn">JSON<textarea id="pasteIn" class="json" spellcheck="false" placeholder='{ "ejercicios": [ … ] }'></textarea></label>
+        <div class="actions" style="align-items:center">
+          <div class="seg" role="group" aria-label="Modo de carga">
+            <button type="button" id="modeAdd" aria-pressed="true">Agregar al banco</button>
+            <button type="button" id="modeRep" aria-pressed="false">Reemplazar el banco</button>
+          </div>
+          <button class="btn primary" type="button" id="loadBtn">Cargar ejercicios</button>
+        </div>
+        <div class="msgs" id="loadMsg" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MESA DE TRABAJO -->
+  <aside class="desk" id="desk" aria-label="Mesa de trabajo">
+    <section class="card readout" aria-live="polite" id="readout">
+      <div class="ro-head">
+        <span class="eyebrow">Lectura de la tabla</span>
+        <div class="seg small" role="group" aria-label="Letra de la variable">
+          <button type="button" data-letter="X" aria-pressed="true">X</button>
+          <button type="button" data-letter="Z" aria-pressed="false">Z</button>
+        </div>
+      </div>
+      <div class="ro-main empty" id="roMain">Seleccioná una celda, o una fila y una columna.</div>
+      <svg class="ro-curve" id="roCurve" viewBox="0 0 132 66" aria-hidden="true"></svg>
+      <div class="ro-sub" id="roSub">X ∼ N(0 ; 1) · la tabla da P(X ≤ x₀)</div>
+      <div class="ro-rel" id="roRel" hidden></div>
+      <div class="ro-actions">
+        <button type="button" class="btn" id="btnPin" disabled>Guardar lectura</button>
+        <label class="chk" for="chkRel"><input type="checkbox" id="chkRel"> Complemento y simetría</label>
+      </div>
+      <div class="pins" id="pins"></div>
+    </section>
+
+    <section class="card tools">
+      <div class="tools-head">
+        <div class="seg" role="group" aria-label="Herramienta">
+          <button type="button" id="tTabla" aria-pressed="true">Tabla normal</button>
+          <button type="button" id="tCalc" aria-pressed="false">Calculadora</button>
+        </div>
+        <button type="button" class="btn ghost" id="clearSel">Borrar selección</button>
+      </div>
+      <div class="tool-body" id="pTabla">
+        <form class="find" id="findForm">
+          <label class="field" for="findIn">Buscar una probabilidad en el cuerpo de la tabla<input id="findIn" class="mono" placeholder="ej. 0,975" inputmode="decimal"></label>
+          <button class="btn" type="submit">Buscar</button>
+        </form>
+        <p class="find-msg" id="findMsg" hidden></p>
+        <div class="tablewrap" id="tablewrap">
+          <table class="zt" id="zt" tabindex="0" aria-label="Tabla de la distribución normal estándar, P(X ≤ x₀). Usá las flechas para moverte."></table>
+        </div>
+        <p class="note">Fila = entero y primer decimal de x₀ · columna = segundo decimal. <b>Errata corregida:</b> en la cartilla, la celda 0,7 / 0,09 dice 0,7652; el valor correcto es 0,7852 (marcado con un punto rojo).</p>
+      </div>
+      <div class="tool-body" id="pCalc" hidden>
+        <div class="calc">
+          <div class="calc-screen">
+            <label for="calcIn" class="eyebrow">Expresión</label>
+            <input id="calcIn" spellcheck="false" autocomplete="off" placeholder="ej. (165 − 150) / 10" inputmode="decimal">
+            <div class="calc-res" id="calcRes">0</div>
+          </div>
+          <div class="keys" id="keys"></div>
+          <div>
+            <div class="eyebrow" style="margin-bottom:4px">Historial <span class="muted" style="text-transform:none;letter-spacing:0;font-weight:400">· tocá un resultado para usarlo</span></div>
+            <div class="hist" id="hist"><span class="muted" style="font-family:var(--font-body)">Todavía no hiciste cuentas.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<button type="button" class="robar" id="roBar"><span id="roBarTxt"></span><span style="font-size:12px;font-family:var(--font-body)">ver tabla ↓</span></button>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+"use strict";
+const TABLA = [[0.5, 0.504, 0.508, 0.512, 0.516, 0.5199, 0.5239, 0.5279, 0.5319, 0.5359], [0.5398, 0.5438, 0.5478, 0.5517, 0.5557, 0.5596, 0.5636, 0.5675, 0.5714, 0.5753], [0.5793, 0.5832, 0.5871, 0.591, 0.5948, 0.5987, 0.6026, 0.6064, 0.6103, 0.6141], [0.6179, 0.6217, 0.6255, 0.6293, 0.6331, 0.6368, 0.6406, 0.6443, 0.648, 0.6517], [0.6554, 0.6591, 0.6628, 0.6664, 0.67, 0.6736, 0.6772, 0.6808, 0.6844, 0.6879], [0.6915, 0.695, 0.6985, 0.7019, 0.7054, 0.7088, 0.7123, 0.7157, 0.719, 0.7224], [0.7257, 0.7291, 0.7324, 0.7357, 0.7389, 0.7422, 0.7454, 0.7486, 0.7517, 0.7549], [0.758, 0.7611, 0.7642, 0.7673, 0.7703, 0.7734, 0.7764, 0.7793, 0.7823, 0.7852], [0.7881, 0.791, 0.7939, 0.7967, 0.7995, 0.8023, 0.8051, 0.8078, 0.8106, 0.8133], [0.8159, 0.8186, 0.8212, 0.8238, 0.8264, 0.8289, 0.8315, 0.834, 0.8364, 0.8389], [0.8413, 0.8438, 0.8461, 0.8485, 0.8508, 0.8531, 0.8554, 0.8577, 0.8599, 0.8621], [0.8643, 0.8665, 0.8686, 0.8708, 0.8729, 0.8749, 0.877, 0.879, 0.881, 0.883], [0.8849, 0.8869, 0.8888, 0.8907, 0.8925, 0.8944, 0.8962, 0.898, 0.8997, 0.9015], [0.9032, 0.9049, 0.9066, 0.9082, 0.9099, 0.9115, 0.9131, 0.9147, 0.9162, 0.9177], [0.9192, 0.9207, 0.9222, 0.9235, 0.9251, 0.9265, 0.9279, 0.9292, 0.9306, 0.9319], [0.9332, 0.9345, 0.9357, 0.937, 0.9382, 0.9394, 0.9406, 0.9418, 0.9429, 0.9441], [0.9452, 0.9463, 0.9474, 0.9485, 0.9495, 0.9505, 0.9515, 0.9525, 0.9535, 0.9545], [0.9554, 0.9564, 0.9573, 0.9582, 0.9591, 0.9599, 0.9608, 0.9616, 0.9625, 0.9633], [0.9641, 0.9649, 0.9656, 0.9664, 0.9671, 0.9678, 0.9686, 0.9693, 0.9699, 0.9706], [0.9713, 0.9719, 0.9726, 0.9732, 0.9738, 0.9744, 0.975, 0.9756, 0.9762, 0.9767], [0.9773, 0.9778, 0.9783, 0.9788, 0.9793, 0.9798, 0.9803, 0.9808, 0.9812, 0.9817], [0.9821, 0.9826, 0.983, 0.9834, 0.9838, 0.9842, 0.9846, 0.985, 0.9854, 0.9857], [0.9861, 0.9865, 0.9868, 0.9871, 0.9875, 0.9878, 0.9881, 0.9884, 0.9887, 0.989], [0.9893, 0.9896, 0.9898, 0.9901, 0.9904, 0.9906, 0.9909, 0.9911, 0.9913, 0.9916], [0.9918, 0.992, 0.9922, 0.9925, 0.9927, 0.9929, 0.9931, 0.9932, 0.9934, 0.9936], [0.9938, 0.994, 0.9941, 0.9943, 0.9945, 0.9946, 0.9948, 0.9949, 0.9951, 0.9952], [0.9953, 0.9955, 0.9956, 0.9957, 0.9959, 0.996, 0.9961, 0.9962, 0.9963, 0.9964], [0.9965, 0.9966, 0.9967, 0.9968, 0.9969, 0.997, 0.9971, 0.9972, 0.9973, 0.9974], [0.9975, 0.9975, 0.9976, 0.9977, 0.9978, 0.9978, 0.9979, 0.998, 0.998, 0.9981], [0.9981, 0.9982, 0.9983, 0.9984, 0.9984, 0.9985, 0.9985, 0.9985, 0.9986, 0.9986], [0.9987, 0.9987, 0.9987, 0.9988, 0.9988, 0.9989, 0.9989, 0.9989, 0.999, 0.999], [0.999, 0.9991, 0.9991, 0.9991, 0.9992, 0.9992, 0.9992, 0.9992, 0.9993, 0.9993], [0.9993, 0.9993, 0.9994, 0.9994, 0.9994, 0.9994, 0.9994, 0.9995, 0.9995, 0.9995], [0.9995, 0.9995, 0.9995, 0.9996, 0.9996, 0.9996, 0.9996, 0.9996, 0.9996, 0.9997], [0.9997, 0.9997, 0.9997, 0.9997, 0.9997, 0.9997, 0.9997, 0.9997, 0.9997, 0.9998], [0.9998, 0.9998, 0.9999, 0.9999, 0.9999, 0.9999, 0.9999, 0.9999, 0.9999, 0.9999]];
+const BANCO_ORIGINAL = {"formato": "practica-normal", "version": 1, "titulo": "Distribución Normal · ejercicios de parciales", "descripcion": "Ejercicios de parciales anteriores adaptados a múltiple opción. Las respuestas se calcularon con la tabla de la cartilla (z redondeado a 2 decimales).", "ejercicios": [{"id": "p2025-e2", "fuente": "Parcial 2025 · Ej. 2", "temas": ["hallar σ", "condicional", "entre dos valores"], "enunciado": "Se cuenta con un tipo de batería cuya duración T (en horas) se distribuye Normal con media 150 y varianza desconocida. Además, se sabe que P(T > 165) = 0,0668.", "preguntas": [{"id": "a", "enunciado": "El desvío σ de T es:", "opciones": [{"id": "A", "texto": "σ = 10"}, {"id": "B", "texto": "σ = 15"}, {"id": "C", "texto": "σ = 6,68"}], "correcta": "A", "pista": "Pasá la cola derecha a una probabilidad acumulada y buscala en el cuerpo de la tabla.", "resolucion": ["P(T > 165) = 0,0668 ⇒ P(T < 165) = 1 − 0,0668 = 0,9332.", "En la tabla, 0,9332 está en la fila 1,5 y la columna 0,00 ⇒ z = 1,50.", "(165 − 150) / σ = 1,5 ⇒ σ = 15 / 1,5 = 10."], "graficoResolucion": {"variable": "T", "media": 150, "desvio": 10, "zona": "mayor", "a": 165}}, {"id": "b", "enunciado": "Se sabe que una batería duró más de 150 horas. La probabilidad de que dure menos de 170 horas es:", "opciones": [{"id": "A", "texto": "0,9546"}, {"id": "B", "texto": "0,9773"}, {"id": "C", "texto": "0,4773"}], "correcta": "A", "pista": "Es una probabilidad condicional: P(T < 170 | T > 150).", "resolucion": ["P(T < 170 | T > 150) = P(150 < T < 170) / P(T > 150).", "P(T > 150) = 0,5 porque 150 es la media.", "P(150 < T < 170) = P(0 < Z < 2) = 0,9773 − 0,5 = 0,4773.", "0,4773 / 0,5 = 0,9546. En el parcial la opción figuraba como 0,9544 porque se usó 0,9772 para z = 2."], "graficoResolucion": {"variable": "T", "media": 150, "desvio": 10, "zona": "entre", "a": 150, "b": 170}}, {"id": "c", "enunciado": "La probabilidad de que una batería dure entre 120 y 140 horas es:", "opciones": [{"id": "A", "texto": "0,0781"}, {"id": "B", "texto": "0,1574"}, {"id": "C", "texto": "0,1600"}], "correcta": "B", "resolucion": ["Estandarizando: (120 − 150)/10 = −3 y (140 − 150)/10 = −1.", "P(−3 < Z < −1) = P(Z < −1) − P(Z < −3).", "= (1 − 0,8413) − (1 − 0,9987) = 0,1587 − 0,0013 = 0,1574."], "graficoResolucion": {"variable": "T", "media": 150, "desvio": 10, "zona": "entre", "a": 120, "b": 140}}]}, {"id": "p2025-e6", "fuente": "Parcial 2025 · Ej. 6", "temas": ["hallar µ", "hallar σ", "percentil", "P(T = t)"], "enunciado": "Sea T una variable aleatoria continua con T ∼ N(µ, σ). Se sabe que P(T < 4) = 0,50 y que el intervalo de confianza al 80 % es [2 ; 6] (intervalo centrado en µ que acumula probabilidad 0,80).", "preguntas": [{"id": "a", "enunciado": "La media µ es:", "opciones": [{"id": "A", "texto": "µ = 2"}, {"id": "B", "texto": "µ = 4"}, {"id": "C", "texto": "µ = 6"}], "correcta": "B", "resolucion": ["En la Normal, el único valor con probabilidad acumulada 0,5 es la media.", "P(T < 4) = 0,5 ⇒ µ = 4. También es el punto medio de [2 ; 6]."]}, {"id": "b", "enunciado": "El valor t₁ tal que P(T < t₁) = 0,10 es:", "opciones": [{"id": "A", "texto": "t₁ = 2"}, {"id": "B", "texto": "t₁ = 1,28"}, {"id": "C", "texto": "t₁ = 3"}], "correcta": "A", "pista": "Si el intervalo central acumula 0,80, ¿cuánto queda en cada cola?", "resolucion": ["Fuera del intervalo central queda 1 − 0,80 = 0,20, repartido en partes iguales: 0,10 en cada cola.", "A la izquierda de 2 queda 0,10 ⇒ t₁ = 2."], "graficoResolucion": {"variable": "T", "media": 4, "desvio": 1.5625, "zona": "menor", "a": 2}}, {"id": "c", "enunciado": "P(T < 6) es:", "opciones": [{"id": "A", "texto": "0,80"}, {"id": "B", "texto": "0,90"}, {"id": "C", "texto": "0,95"}], "correcta": "B", "resolucion": ["P(T < 6) = P(T < 2) + P(2 < T < 6) = 0,10 + 0,80 = 0,90."], "graficoResolucion": {"variable": "T", "media": 4, "desvio": 1.5625, "zona": "menor", "a": 6}}, {"id": "d", "enunciado": "P(T = 4) es:", "opciones": [{"id": "A", "texto": "0,50"}, {"id": "B", "texto": "0"}, {"id": "C", "texto": "0,3989"}], "correcta": "B", "resolucion": ["T es continua: la probabilidad de un valor puntual es 0 (no hay área bajo un punto).", "0,3989 es la altura de la densidad N(0;1) en 0, no una probabilidad."]}, {"id": "e", "enunciado": "Usando la tabla, el desvío σ vale aproximadamente:", "opciones": [{"id": "A", "texto": "σ ≈ 1,56"}, {"id": "B", "texto": "σ ≈ 2,00"}, {"id": "C", "texto": "σ ≈ 2,50"}], "correcta": "A", "resolucion": ["P(T < 6) = 0,90. En la tabla el valor más cercano a 0,90 es 0,8997 ⇒ z = 1,28.", "(6 − 4) / σ = 1,28 ⇒ σ = 2 / 1,28 ≈ 1,5625."]}]}, {"id": "p2024-e6", "fuente": "Parcial 2024 · Ej. 6", "temas": ["hallar σ", "cola derecha", "condicional"], "enunciado": "Sea T el tiempo de duración (en horas) de un tipo de batería. T tiene distribución Normal con media 200 y P(T > 250) = 0,1056.", "preguntas": [{"id": "a", "enunciado": "El desvío de T es:", "opciones": [{"id": "A", "texto": "σ = 50"}, {"id": "B", "texto": "σ = 40"}, {"id": "C", "texto": "σ = 25"}], "correcta": "B", "resolucion": ["P(T < 250) = 1 − 0,1056 = 0,8944 ⇒ en la tabla z = 1,25.", "(250 − 200) / σ = 1,25 ⇒ σ = 50 / 1,25 = 40."], "graficoResolucion": {"variable": "T", "media": 200, "desvio": 40, "zona": "mayor", "a": 250}}, {"id": "b", "enunciado": "La probabilidad de que una batería dure más de 220 horas es:", "opciones": [{"id": "A", "texto": "0,6915"}, {"id": "B", "texto": "0,1915"}, {"id": "C", "texto": "0,3085"}], "correcta": "C", "resolucion": ["z = (220 − 200) / 40 = 0,5.", "P(T > 220) = P(Z > 0,5) = 1 − P(Z < 0,5) = 1 − 0,6915 = 0,3085."], "graficoResolucion": {"variable": "T", "media": 200, "desvio": 40, "zona": "mayor", "a": 220}}, {"id": "c", "enunciado": "Una batería está funcionando desde hace 190 horas y aún tiene carga. La probabilidad de que dure más de 230 horas es:", "opciones": [{"id": "A", "texto": "0,2266"}, {"id": "B", "texto": "0,3785"}, {"id": "C", "texto": "0,1357"}], "correcta": "B", "pista": "P(T > 230 | T > 190). Como 230 > 190, la intersección de los dos sucesos es T > 230.", "resolucion": ["P(T > 230 | T > 190) = P(T > 230) / P(T > 190).", "P(T > 230): z = 0,75 ⇒ 1 − 0,7734 = 0,2266.", "P(T > 190): z = −0,25 ⇒ P(Z > −0,25) = P(Z < 0,25) = 0,5987.", "0,2266 / 0,5987 ≈ 0,3785."]}]}, {"id": "p2023-e5", "fuente": "Parcial 2023 · Ej. 5", "temas": ["hallar µ", "hallar σ", "cola izquierda", "entre dos valores"], "enunciado": "Un economista asegura que la devaluación del próximo semestre se puede representar con una variable aleatoria X Normal, tal que P(X < 0,025) = 0,5 y P(X < 0,0583) = 0,9868.", "preguntas": [{"id": "a", "enunciado": "La esperanza y la varianza de X son:", "opciones": [{"id": "A", "texto": "E(X) = 0,025 ; V(X) = 0,000225"}, {"id": "B", "texto": "E(X) = 0,025 ; V(X) = 0,015"}, {"id": "C", "texto": "E(X) = 0,0583 ; V(X) = 0,000225"}], "correcta": "A", "pista": "Una de las dos probabilidades te da la media directamente. Cuidado: se pide la varianza, no el desvío.", "resolucion": ["P(X < 0,025) = 0,5 ⇒ µ = 0,025.", "0,9868 en la tabla ⇒ z = 2,22. Entonces (0,0583 − 0,025) / σ = 2,22 ⇒ σ = 0,0333 / 2,22 = 0,015.", "V(X) = σ² = 0,015² = 0,000225."]}, {"id": "b", "enunciado": "La probabilidad de que la devaluación sea negativa es:", "opciones": [{"id": "A", "texto": "0,0475"}, {"id": "B", "texto": "0,4525"}, {"id": "C", "texto": "0,9525"}], "correcta": "A", "resolucion": ["z = (0 − 0,025) / 0,015 ≈ −1,67.", "P(X < 0) = P(Z < −1,67) = 1 − P(Z < 1,67) = 1 − 0,9525 = 0,0475."], "graficoResolucion": {"variable": "X", "media": 0.025, "desvio": 0.015, "zona": "menor", "a": 0}}, {"id": "c", "enunciado": "La probabilidad de que la devaluación esté entre 0,01 y 0,04 es:", "opciones": [{"id": "A", "texto": "0,3413"}, {"id": "B", "texto": "0,6826"}, {"id": "C", "texto": "0,8413"}], "correcta": "B", "resolucion": ["z₁ = (0,01 − 0,025)/0,015 = −1 y z₂ = (0,04 − 0,025)/0,015 = 1.", "P(−1 < Z < 1) = P(Z < 1) − P(Z < −1) = 0,8413 − (1 − 0,8413) = 0,6826."], "graficoResolucion": {"variable": "X", "media": 0.025, "desvio": 0.015, "zona": "entre", "a": 0.01, "b": 0.04}}]}, {"id": "p2022-e3", "fuente": "Parcial 2022 · Ej. 3", "temas": ["hallar µ", "cola derecha", "lectura de gráfico"], "enunciado": "La tasa de interés mensual en pesos se considera una variable aleatoria X Normal con varianza 0,0001. Se sabe que P(X < 0,05) = 0,8413.", "preguntas": [{"id": "a", "enunciado": "La media de la tasa de interés es:", "opciones": [{"id": "A", "texto": "µ = 0,05"}, {"id": "B", "texto": "µ = 0,0499"}, {"id": "C", "texto": "µ = 0,04"}], "correcta": "C", "resolucion": ["σ = √0,0001 = 0,01.", "0,8413 en la tabla ⇒ z = 1. Entonces (0,05 − µ) / 0,01 = 1 ⇒ µ = 0,04."]}, {"id": "b", "enunciado": "La probabilidad de que la tasa sea mayor a 0,015 es:", "opciones": [{"id": "A", "texto": "0,9938"}, {"id": "B", "texto": "0,0062"}, {"id": "C", "texto": "0,5000"}], "correcta": "A", "resolucion": ["z = (0,015 − 0,04) / 0,01 = −2,5.", "P(Z > −2,5) = P(Z < 2,5) = 0,9938."], "graficoResolucion": {"variable": "X", "media": 0.04, "desvio": 0.01, "zona": "mayor", "a": 0.015}}, {"id": "c", "enunciado": "En el esbozo de la densidad de X, la probabilidad de la parte anterior corresponde a:", "opciones": [{"id": "A", "texto": "El área a la derecha de 0,015, que abarca casi toda la curva."}, {"id": "B", "texto": "El área a la izquierda de 0,015, una cola pequeña."}, {"id": "C", "texto": "La altura de la curva en x = 0,015."}], "correcta": "A", "resolucion": ["«Mayor a 0,015» es el área bajo la curva a la derecha de 0,015.", "0,015 está 2,5 desvíos por debajo de la media, así que esa área es casi el total (0,9938)."]}]}, {"id": "p2019-e3", "fuente": "Parcial 2019 · Ej. 3", "temas": ["cola izquierda", "cola derecha", "alrededor de la media"], "enunciado": "Un empleado pasa en promedio 77 horas conectado a Internet durante las horas de trabajo. Los tiempos se distribuyen normalmente con desviación estándar de 20 horas: X ∼ N(77 ; 20).", "preguntas": [{"id": "a", "enunciado": "La probabilidad de que un empleado elegido al azar haya pasado menos de 50 horas conectado es:", "opciones": [{"id": "A", "texto": "0,0885"}, {"id": "B", "texto": "0,9115"}, {"id": "C", "texto": "0,4115"}], "correcta": "A", "resolucion": ["z = (50 − 77) / 20 = −1,35.", "P(Z < −1,35) = 1 − P(Z < 1,35) = 1 − 0,9115 = 0,0885."], "graficoResolucion": {"variable": "X", "media": 77, "desvio": 20, "zona": "menor", "a": 50}}, {"id": "b", "enunciado": "El porcentaje de empleados que pasó más de 100 horas conectado es:", "opciones": [{"id": "A", "texto": "87,49 %"}, {"id": "B", "texto": "12,51 %"}, {"id": "C", "texto": "37,49 %"}], "correcta": "B", "resolucion": ["z = (100 − 77) / 20 = 1,15.", "P(Z > 1,15) = 1 − 0,8749 = 0,1251 ⇒ 12,51 %."], "graficoResolucion": {"variable": "X", "media": 77, "desvio": 20, "zona": "mayor", "a": 100}}, {"id": "c", "enunciado": "El porcentaje de empleados que está a menos de medio desvío estándar de la media es:", "opciones": [{"id": "A", "texto": "69,15 %"}, {"id": "B", "texto": "19,15 %"}, {"id": "C", "texto": "38,30 %"}], "correcta": "C", "pista": "«A menos de medio desvío» significa |Z| < 0,5.", "resolucion": ["P(|Z| < 0,5) = P(−0,5 < Z < 0,5) = P(Z < 0,5) − P(Z < −0,5).", "= 0,6915 − 0,3085 = 0,3830 ⇒ 38,30 %."], "graficoResolucion": {"variable": "X", "media": 77, "desvio": 20, "zona": "entre", "a": 67, "b": 87}}]}, {"id": "p2018-e3", "fuente": "Parcial 2018 · Ej. 3", "temas": ["P(X = x)", "cola derecha", "percentil", "intervalo más corto", "entre dos valores"], "enunciado": "Una empresa de reparación de aires acondicionados sabe que el tiempo de reparación X sigue una distribución Normal con media 60 minutos y varianza 100 (minutos)².", "preguntas": [{"id": "a", "enunciado": "La probabilidad de que tarde exactamente 60 minutos en reparar un aparato es:", "opciones": [{"id": "A", "texto": "0,5"}, {"id": "B", "texto": "0,3989"}, {"id": "C", "texto": "0"}], "correcta": "C", "resolucion": ["X es continua ⇒ P(X = 60) = 0."]}, {"id": "b", "enunciado": "La probabilidad de que tarde más de 65 minutos es:", "opciones": [{"id": "A", "texto": "0,3085"}, {"id": "B", "texto": "0,6915"}, {"id": "C", "texto": "0,1915"}], "correcta": "A", "pista": "Ojo: la varianza es 100, el desvío es 10.", "resolucion": ["σ = √100 = 10. z = (65 − 60)/10 = 0,5.", "P(Z > 0,5) = 1 − 0,6915 = 0,3085."], "graficoResolucion": {"variable": "X", "media": 60, "desvio": 10, "zona": "mayor", "a": 65}}, {"id": "c", "enunciado": "Se sabe que la probabilidad de que la reparación demore más de t₀ minutos es 0,025. El tiempo t₀ es:", "opciones": [{"id": "A", "texto": "t₀ = 76,45"}, {"id": "B", "texto": "t₀ = 79,6"}, {"id": "C", "texto": "t₀ = 40,4"}], "correcta": "B", "resolucion": ["P(X > t₀) = 0,025 ⇒ P(X < t₀) = 0,975 ⇒ en la tabla z = 1,96.", "t₀ = 60 + 1,96 · 10 = 79,6 minutos."], "graficoResolucion": {"variable": "X", "media": 60, "desvio": 10, "zona": "mayor", "a": 79.6}}, {"id": "d", "enunciado": "El rango de tiempo más corto que incluye el 50 % de las reparaciones es:", "opciones": [{"id": "A", "texto": "[50 ; 70]"}, {"id": "B", "texto": "[60 ; 66,7]"}, {"id": "C", "texto": "[53,3 ; 66,7]"}], "correcta": "C", "pista": "El intervalo más corto para una probabilidad dada está centrado en la media, donde la densidad es más alta.", "resolucion": ["Buscamos z con P(−z < Z < z) = 0,5 ⇒ P(Z < z) = 0,75.", "En la tabla, lo más cercano a 0,75 es 0,7486 ⇒ z ≈ 0,67.", "60 ± 0,67 · 10 ⇒ [53,3 ; 66,7]."], "graficoResolucion": {"variable": "X", "media": 60, "desvio": 10, "zona": "entre", "a": 53.3, "b": 66.7}}, {"id": "e", "enunciado": "La probabilidad de que el tiempo de reparación esté entre 50 y 70 minutos es:", "opciones": [{"id": "A", "texto": "0,6826"}, {"id": "B", "texto": "0,3413"}, {"id": "C", "texto": "0,9544"}], "correcta": "A", "resolucion": ["z = ±1 ⇒ P(−1 < Z < 1) = 0,8413 − 0,1587 = 0,6826."], "graficoResolucion": {"variable": "X", "media": 60, "desvio": 10, "zona": "entre", "a": 50, "b": 70}}]}, {"id": "p2017-e3", "fuente": "Parcial 2017 · Ej. 3", "temas": ["entre dos valores", "percentil", "comparar sin calcular", "combinar con binomial"], "enunciado": "La calificación X de un parcial de Introducción a la Estadística tiene distribución Normal con media 55 puntos (sobre 100) y desviación estándar 5 puntos.", "preguntas": [{"id": "a", "enunciado": "La probabilidad de que una persona elegida al azar tenga entre 50 y 60 puntos es:", "opciones": [{"id": "A", "texto": "0,6826"}, {"id": "B", "texto": "0,8413"}, {"id": "C", "texto": "0,3413"}], "correcta": "A", "resolucion": ["z = ±1 ⇒ P(−1 < Z < 1) = 0,8413 − 0,1587 = 0,6826."], "graficoResolucion": {"variable": "X", "media": 55, "desvio": 5, "zona": "entre", "a": 50, "b": 60}}, {"id": "b", "enunciado": "La calificación mínima necesaria para estar en el 10 % superior es:", "opciones": [{"id": "A", "texto": "48,6"}, {"id": "B", "texto": "61,4"}, {"id": "C", "texto": "63,2"}], "correcta": "B", "resolucion": ["P(X > c) = 0,10 ⇒ P(X < c) = 0,90 ⇒ en la tabla z ≈ 1,28 (0,8997).", "c = 55 + 1,28 · 5 = 61,4."], "graficoResolucion": {"variable": "X", "media": 55, "desvio": 5, "zona": "mayor", "a": 61.4}}, {"id": "c", "enunciado": "Sin hacer cálculos: entre los rangos 50–57, 57–64, 64–71 y 71–78, ¿cuál es el más probable y cuál el menos probable?", "opciones": [{"id": "A", "texto": "Más probable 50–57; menos probable 71–78."}, {"id": "B", "texto": "Más probable 57–64; menos probable 71–78."}, {"id": "C", "texto": "Son igual de probables porque todos tienen ancho 7."}], "correcta": "A", "resolucion": ["Todos los rangos tienen el mismo ancho, así que gana el que está donde la curva es más alta.", "50–57 contiene a la media (55) ⇒ es el más probable. Cuanto más lejos de la media, menor el área ⇒ 71–78 es el menos probable.", "Como control: 0,4967; 0,3087; 0,0352 y 0,0006."]}, {"id": "d", "enunciado": "Se eligen al azar dos personas que hicieron el parcial. La probabilidad de que al menos una tenga más de 60 puntos es:", "opciones": [{"id": "A", "texto": "0,3174"}, {"id": "B", "texto": "0,2922"}, {"id": "C", "texto": "0,0252"}], "correcta": "B", "pista": "«Al menos una» = 1 − «ninguna».", "resolucion": ["p = P(X > 60) = P(Z > 1) = 1 − 0,8413 = 0,1587.", "P(ninguna > 60) = 0,8413² ≈ 0,7078.", "P(al menos una) = 1 − 0,7078 = 0,2922."]}]}, {"id": "p2016-e1", "fuente": "Parcial 2016 · Ej. 1", "temas": ["comparar sin calcular", "probabilidad total", "Bayes", "combinar con binomial"], "enunciado": "Una persona va a un evento en Libertad. En la terminal hay tres ómnibus que salen a la misma hora: dos de la compañía A y uno de la compañía B. Los tiempos de viaje son Normales: A con µ = 49 min y σ = 2 min; B con µ = 50 min y σ = 5 min. El evento empieza dentro de 48 minutos.", "preguntas": [{"id": "a", "enunciado": "¿Qué compañía le conviene para llegar a tiempo?", "opciones": [{"id": "A", "texto": "A, porque P(llegar a tiempo) = 0,3085."}, {"id": "B", "texto": "B, porque P(llegar a tiempo) = 0,3446."}, {"id": "C", "texto": "Da lo mismo: las dos tienen media cercana a 48."}], "correcta": "B", "resolucion": ["A: P(T < 48) = P(Z < −0,5) = 1 − 0,6915 = 0,3085.", "B: P(T < 48) = P(Z < −0,4) = 1 − 0,6554 = 0,3446.", "B tiene más probabilidad de llegar a tiempo: su mayor dispersión deja más área por debajo de 48."]}, {"id": "b", "enunciado": "Si elige al azar uno de los tres ómnibus, la probabilidad de llegar a tiempo es:", "opciones": [{"id": "A", "texto": "0,3266"}, {"id": "B", "texto": "0,3205"}, {"id": "C", "texto": "0,6531"}], "correcta": "B", "pista": "Probabilidad total: P(A) = 2/3 y P(B) = 1/3.", "resolucion": ["P(a tiempo) = 2/3 · 0,3085 + 1/3 · 0,3446 = 0,2057 + 0,1149 = 0,3205."]}, {"id": "c", "enunciado": "Dado que llegó a tiempo, la probabilidad de que haya tomado un ómnibus de A es:", "opciones": [{"id": "A", "texto": "0,6416"}, {"id": "B", "texto": "0,6667"}, {"id": "C", "texto": "0,3584"}], "correcta": "A", "resolucion": ["Bayes: P(A | a tiempo) = (2/3 · 0,3085) / 0,3205 = 0,2057 / 0,3205 ≈ 0,6416."]}, {"id": "d", "enunciado": "De 10 ómnibus de la compañía A, la probabilidad de que al menos 3 demoren más de 48 minutos es:", "opciones": [{"id": "A", "texto": "0,9981"}, {"id": "B", "texto": "0,6396"}, {"id": "C", "texto": "0,0019"}], "correcta": "A", "resolucion": ["p = P(T_A > 48) = 1 − 0,3085 = 0,6915. Y = cantidad que demoran ∼ Bin(10 ; 0,6915).", "P(Y ≥ 3) = 1 − P(Y = 0) − P(Y = 1) − P(Y = 2) ≈ 1 − 0,0019 = 0,9981."]}]}, {"id": "p2015-e3", "fuente": "Parcial 2015 · Ej. 3", "temas": ["percentil", "dos colas", "una cola"], "enunciado": "La longitud (ancho) de unas tiras de papel billete sigue una distribución Normal de media 5 cm y desviación típica 0,001 cm. Una tira se acepta si su longitud está en [5 − L ; 5 + L].", "preguntas": [{"id": "a", "enunciado": "El valor de L para que solo el 5 % de las tiras sea rechazado es:", "opciones": [{"id": "A", "texto": "L = 0,001645"}, {"id": "B", "texto": "L = 0,00196"}, {"id": "C", "texto": "L = 0,0025"}], "correcta": "B", "pista": "El rechazo se reparte en las dos colas.", "resolucion": ["Rechazo 5 % ⇒ 2,5 % en cada cola ⇒ P(Z < z) = 0,975 ⇒ z = 1,96.", "L = 1,96 · 0,001 = 0,00196."], "graficoResolucion": {"variable": "X", "media": 5, "desvio": 0.001, "zona": "fuera", "a": 4.99804, "b": 5.00196}}, {"id": "b", "enunciado": "Si L = 0,0015, el porcentaje de tiras rechazadas es:", "opciones": [{"id": "A", "texto": "13,36 %"}, {"id": "B", "texto": "6,68 %"}, {"id": "C", "texto": "86,64 %"}], "correcta": "A", "resolucion": ["z = 0,0015 / 0,001 = 1,5.", "P(|Z| > 1,5) = 2 · (1 − 0,9332) = 0,1336 ⇒ 13,36 %."], "graficoResolucion": {"variable": "X", "media": 5, "desvio": 0.001, "zona": "fuera", "a": 4.9985, "b": 5.0015}}, {"id": "c", "enunciado": "Con L = 0,0015, si el proveedor puede reprocesar las tiras más largas que 5 + L, el porcentaje de tiras rechazadas es:", "opciones": [{"id": "A", "texto": "13,36 %"}, {"id": "B", "texto": "0 %"}, {"id": "C", "texto": "6,68 %"}], "correcta": "C", "resolucion": ["Las tiras largas se reprocesan, así que solo se rechaza la cola izquierda.", "P(Z < −1,5) = 1 − 0,9332 = 0,0668 ⇒ 6,68 %."], "graficoResolucion": {"variable": "X", "media": 5, "desvio": 0.001, "zona": "menor", "a": 4.9985}}]}, {"id": "p2014-e3", "fuente": "Parcial 2014 · Ej. 3", "temas": ["comparar sin calcular", "P(X = x)", "puntos de inflexión", "percentil"], "enunciado": "X e Y son variables Normales con igual varianza y medias µX y µY, con 0 < µX < µY. Las dos campanas tienen la misma forma; la de X está a la izquierda de la de Y.", "preguntas": [{"id": "a", "enunciado": "¿Cuál es menor, P(X < 0) o P(Y < 0)?", "opciones": [{"id": "A", "texto": "P(X < 0) es menor."}, {"id": "B", "texto": "P(Y < 0) es menor."}, {"id": "C", "texto": "Son iguales porque tienen la misma varianza."}], "correcta": "B", "resolucion": ["Con el mismo σ, 0 queda más lejos (en desvíos) de µY que de µX.", "(0 − µY)/σ < (0 − µX)/σ ⇒ P(Y < 0) < P(X < 0)."]}, {"id": "b", "enunciado": "P(X = 0) es:", "opciones": [{"id": "A", "texto": "0"}, {"id": "B", "texto": "P(X < 0)"}, {"id": "C", "texto": "No se puede saber sin µX y σ."}], "correcta": "A", "resolucion": ["X es continua ⇒ la probabilidad de un punto es 0."]}, {"id": "c", "enunciado": "Sea a tal que P(X > a) = 0,10 y b tal que P(Y > b) = 0,10. ¿Cuál es mayor?", "opciones": [{"id": "A", "texto": "a > b"}, {"id": "B", "texto": "b > a"}, {"id": "C", "texto": "a = b"}], "correcta": "B", "resolucion": ["a = µX + 1,28σ y b = µY + 1,28σ. Como µY > µX, b > a.", "Es la misma campana desplazada a la derecha."]}, {"id": "d", "enunciado": "Si µX = 5 y los puntos de inflexión de la densidad de X están en x = 3 y x = 7, el valor α con P(X > α) = 0,9 es:", "opciones": [{"id": "A", "texto": "α = 7,56"}, {"id": "B", "texto": "α = 2,44"}, {"id": "C", "texto": "α = 4,10"}], "correcta": "B", "pista": "Los puntos de inflexión de la Normal están en µ − σ y µ + σ.", "resolucion": ["Inflexión en 5 ± σ = 3 y 7 ⇒ σ = 2.", "P(X > α) = 0,9 ⇒ P(X < α) = 0,1 ⇒ z = −1,28.", "α = 5 − 1,28 · 2 = 2,44."], "graficoResolucion": {"variable": "X", "media": 5, "desvio": 2, "zona": "mayor", "a": 2.44}}]}, {"id": "p2013-e3", "fuente": "Parcial 2013 · Ej. 3", "temas": ["cola izquierda", "hallar µ", "hallar σ"], "enunciado": "Un agricultor llena bolsas de maíz garantizando 50 kg por bolsa. El peso P de las bolsas es Normal con media 50,25 kg y desviación típica 0,21 kg.", "preguntas": [{"id": "a", "enunciado": "La probabilidad de que una bolsa elegida al azar no supere el peso garantizado es:", "opciones": [{"id": "A", "texto": "0,1170"}, {"id": "B", "texto": "0,8830"}, {"id": "C", "texto": "0,3830"}], "correcta": "A", "resolucion": ["z = (50 − 50,25)/0,21 ≈ −1,19.", "P(Z < −1,19) = 1 − 0,8830 = 0,1170."], "graficoResolucion": {"variable": "P", "media": 50.25, "desvio": 0.21, "zona": "menor", "a": 50}}, {"id": "b", "enunciado": "Si se quiere que P(P < 49) = 1 % y P(P > 52) = 2 %, la media y el desvío deben ser aproximadamente:", "opciones": [{"id": "A", "texto": "µ ≈ 50,60 ; σ ≈ 0,68"}, {"id": "B", "texto": "µ ≈ 50,50 ; σ ≈ 0,75"}, {"id": "C", "texto": "µ = 50,25 ; σ = 0,21"}], "correcta": "A", "pista": "Dos condiciones ⇒ un sistema de dos ecuaciones con µ y σ.", "resolucion": ["P(P < 49) = 0,01 ⇒ z = −2,33 (0,9901 en la tabla) ⇒ (49 − µ)/σ = −2,33.", "P(P < 52) = 0,98 ⇒ z = 2,05 (0,9798) ⇒ (52 − µ)/σ = 2,05.", "Restando: 3/σ = 4,38 ⇒ σ ≈ 0,685. Luego µ = 49 + 2,33 · 0,685 ≈ 50,60."]}]}, {"id": "zonas-1", "fuente": "Práctica de zonas", "temas": ["lectura de gráfico"], "enunciado": "Z ∼ N(0 ; 1). En cada pregunta, mirá el área sombreada del gráfico.", "preguntas": [{"id": "a", "enunciado": "¿Qué notación corresponde al área sombreada?", "grafico": {"variable": "Z", "media": 0, "desvio": 1, "zona": "mayor", "a": 1.2}, "opciones": [{"id": "A", "texto": "P(Z < 1,2)"}, {"id": "B", "texto": "P(Z > 1,2)"}, {"id": "C", "texto": "P(Z > −1,2)"}], "correcta": "B", "resolucion": ["Está sombreada la cola derecha, a partir de 1,2 ⇒ P(Z > 1,2) = 1 − 0,8849 = 0,1151."]}, {"id": "b", "enunciado": "¿Cuánto vale el área sombreada?", "grafico": {"variable": "Z", "media": 0, "desvio": 1, "zona": "fuera", "a": -1, "b": 1}, "opciones": [{"id": "A", "texto": "0,6826"}, {"id": "B", "texto": "0,3174"}, {"id": "C", "texto": "0,1587"}], "correcta": "B", "resolucion": ["Son las dos colas: P(Z < −1) + P(Z > 1) = P(|Z| > 1).", "= 1 − (0,8413 − 0,1587) = 1 − 0,6826 = 0,3174."]}, {"id": "c", "enunciado": "¿Qué notación corresponde al área sombreada?", "grafico": {"variable": "Z", "media": 0, "desvio": 1, "zona": "entre", "a": -0.5, "b": 1.5}, "opciones": [{"id": "A", "texto": "P(−0,5 < Z < 1,5)"}, {"id": "B", "texto": "P(Z < 1,5) − P(Z > −0,5)"}, {"id": "C", "texto": "P(Z > −0,5) + P(Z < 1,5)"}], "correcta": "A", "resolucion": ["Es el área entre −0,5 y 1,5: P(−0,5 < Z < 1,5) = P(Z < 1,5) − P(Z < −0,5).", "= 0,9332 − (1 − 0,6915) = 0,9332 − 0,3085 = 0,6247."]}]}]};
+
+/* ---------- utilidades ---------- */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v == null ? d : JSON.parse(v); } catch (e) { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+};
+const round4 = x => Math.round(x * 1e4) / 1e4;
+const MINUS = "−";
+function num(n, dec = 4) {
+  if (!isFinite(n)) return "—";
+  let s = String(+(+n).toFixed(dec));
+  if (/e/.test(s)) s = (+n).toFixed(dec);
+  return s.replace("-", MINUS).replace(".", ",");
+}
+const prob = p => p.toFixed(4).replace(".", ",");
+const zf = z => (z < 0 && Math.abs(z) >= 0.005 ? MINUS : "") + Math.abs(z).toFixed(2).replace(".", ",");
+function parseNum(s) {
+  if (typeof s === "number") return s;
+  const t = String(s).trim().replace(/[−–]/g, "-").replace(/\s/g, "").replace(",", ".");
+  if (!/^-?\d*\.?\d+$/.test(t) && !/^-?\d+\.$/.test(t)) return NaN;
+  return parseFloat(t);
+}
+let toastT;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("on"), 2200); }
+
+/* ---------- tabla ---------- */
+function phiTabla(z) {
+  const k = Math.round(Math.abs(z) * 100);
+  let p;
+  if (k > 359) p = 1; else p = TABLA[Math.floor(k / 10)][k % 10];
+  return (z < 0 && k > 0) ? round4(1 - p) : p;
+}
+const fueraTabla = z => Math.round(Math.abs(z) * 100) > 359;
+
+/* ---------- curva (SVG) ---------- */
+const ZMIN = -3.6, ZMAX = 3.6;
+const dens = z => Math.exp(-z * z / 2) / Math.sqrt(2 * Math.PI);
+function curvaSVG(g, o = {}) {
+  const W = o.w || 520, H = o.h || 200, mini = !!o.mini;
+  const pl = mini ? 4 : 18, pr = mini ? 4 : 18, pt = mini ? 6 : 34, pb = mini ? 6 : (g.desvio === 1 && g.media === 0 ? 30 : 44);
+  const X = z => pl + (z - ZMIN) / (ZMAX - ZMIN) * (W - pl - pr);
+  const base = H - pb, top = pt;
+  const Y = d => base - d / 0.3989 * (base - top);
+  const mu = +g.media || 0, sg = +g.desvio || 1;
+  const toZ = x => (x - mu) / sg;
+  const clampZ = z => Math.max(ZMIN, Math.min(ZMAX, z));
+  let out = "";
+  const area = (z1, z2) => {
+    z1 = clampZ(z1); z2 = clampZ(z2); if (z2 <= z1) return "";
+    let d = `M${X(z1).toFixed(1)},${base}`;
+    const n = Math.max(2, Math.ceil((z2 - z1) / 0.03));
+    for (let i = 0; i <= n; i++) { const z = z1 + (z2 - z1) * i / n; d += `L${X(z).toFixed(1)},${Y(dens(z)).toFixed(1)}`; }
+    d += `L${X(z2).toFixed(1)},${base}Z`;
+    return `<path class="cv-area" d="${d}"/>`;
+  };
+  const za = g.a != null ? toZ(+g.a) : null, zb = g.b != null ? toZ(+g.b) : null;
+  out += `<rect class="cv-bg" x="0" y="0" width="${W}" height="${H}"/>`;
+  if (g.zona === "menor") out += area(ZMIN, za);
+  else if (g.zona === "mayor") out += area(za, ZMAX);
+  else if (g.zona === "entre") out += area(za, zb);
+  else if (g.zona === "fuera") out += area(ZMIN, za) + area(zb, ZMAX);
+  let d = "";
+  for (let i = 0; i <= 240; i++) { const z = ZMIN + (ZMAX - ZMIN) * i / 240; d += (i ? "L" : "M") + X(z).toFixed(1) + "," + Y(dens(z)).toFixed(1); }
+  out += `<path class="cv-curve" d="${d}"/>`;
+  out += `<line class="cv-axis" x1="${pl}" y1="${base}" x2="${W - pr}" y2="${base}"/>`;
+  if (!mini) {
+    out += `<line class="cv-mean" x1="${X(0)}" y1="${base}" x2="${X(0)}" y2="${Y(0.3989)}"/>`;
+    const std = (mu === 0 && sg === 1);
+    for (let k = -3; k <= 3; k++) {
+      const x = X(k);
+      out += `<line class="cv-tick" x1="${x}" y1="${base}" x2="${x}" y2="${base + 5}"/>`;
+      out += `<text class="cv-lab" x="${x}" y="${base + 18}" text-anchor="middle">${std ? num(k) : num(mu + k * sg)}</text>`;
+      if (!std) out += `<text class="cv-lab z" x="${x}" y="${base + 33}" text-anchor="middle">z=${num(k)}</text>`;
+    }
+    const bounds = [];
+    if (za != null) bounds.push(["a", za, +g.a]);
+    if (zb != null && (g.zona === "entre" || g.zona === "fuera")) bounds.push(["b", zb, +g.b]);
+    bounds.forEach(([key, z, x]) => {
+      const zc = clampZ(z), px = X(zc);
+      out += `<line class="cv-bound" x1="${px}" y1="${base}" x2="${px}" y2="${top - 14}"/>`;
+      const label = num(x);
+      const w = Math.max(30, label.length * 8 + 12);
+      let lx = Math.max(w / 2 + 2, Math.min(W - w / 2 - 2, px));
+      out += `<rect class="cv-pillbg" x="${lx - w / 2}" y="${top - 30}" width="${w}" height="20" rx="10"/>`;
+      out += `<text class="cv-blab" x="${lx}" y="${top - 16}" text-anchor="middle">${esc(label)}</text>`;
+      if (o.interactive) {
+        out += `<rect class="cv-hit" data-h="${key}" x="${px - 14}" y="${top - 32}" width="28" height="${base - top + 46}"/>`;
+        out += `<circle class="cv-knob" data-h="${key}" cx="${px}" cy="${base}" r="8"/>`;
+      }
+    });
+  } else if (g.zona === "menor" && za != null) {
+    out += `<line class="cv-bound" x1="${X(clampZ(za))}" y1="${base}" x2="${X(clampZ(za))}" y2="${top}"/>`;
+  }
+  return { svg: out, X, W, H, pl, pr };
+}
+function curvaHTML(g, w = 520, h = 200) {
+  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(notacion(g))}">${curvaSVG(g, { w, h }).svg}</svg>`;
+}
+
+/* ---------- notación ---------- */
+function notacion(g, letra) {
+  const v = letra || g.variable || "X";
+  const a = num(+g.a), b = g.b != null ? num(+g.b) : "";
+  switch (g.zona) {
+    case "menor": return `P(${v} < ${a})`;
+    case "mayor": return `P(${v} > ${a})`;
+    case "entre": return `P(${a} < ${v} < ${b})`;
+    case "fuera": return `P(${v} < ${a}) + P(${v} > ${b})`;
+  }
+  return "";
+}
+function Fz(z) { // P(Z < z) con la tabla
+  const p = phiTabla(Math.abs(z)), apx = fueraTabla(z) ? "≈ " : "";
+  if (Math.round(z * 100) >= 0) return { e: `P(Z < ${zf(z)})`, n: apx + prob(p), v: p, c: false };
+  return { e: `1 − P(Z < ${zf(-z)})`, n: `1 − ${apx}${prob(p)}`, v: round4(1 - p), c: true };
+}
+function Gz(z) { // P(Z > z)
+  const p = phiTabla(Math.abs(z)), apx = fueraTabla(z) ? "≈ " : "";
+  if (Math.round(z * 100) >= 0) return { e: `1 − P(Z < ${zf(z)})`, n: `1 − ${apx}${prob(p)}`, v: round4(1 - p), c: true };
+  return { e: `P(Z < ${zf(-z)})`, n: apx + prob(p), v: p, c: false };
+}
+const wrap = f => f.c ? { e: `(${f.e})`, n: `(${f.n})` } : f;
+function tablaExpr(zona, za, zb) {
+  za = Math.round(za * 100) / 100; if (zb != null) zb = Math.round(zb * 100) / 100;
+  if (zona === "menor") return Fz(za);
+  if (zona === "mayor") return Gz(za);
+  const B = Fz(zb), A = Fz(za), wa = wrap(A), wb = wrap(B);
+  const ent = { e: `${wb.e} − ${wa.e}`, n: `${wb.n} − ${wa.n}`, v: round4(B.v - A.v), c: true };
+  if (zona === "entre") return ent;
+  return { e: `1 − [${ent.e}]`, n: `1 − [${ent.n}]`, v: round4(1 - ent.v), c: true };
+}
+
+/* =========================================================
+   LECTURA DE TABLA
+   ========================================================= */
+const sel = { r: null, c: null, letra: store.get("nrm.letra", "X"), rel: false };
+let pins = store.get("nrm.pins", []);
+function buildTabla() {
+  let h = `<thead><tr><th class="corner" scope="col">x₀</th>`;
+  for (let j = 0; j < 10; j++) h += `<th scope="col" data-c="${j}"><button type="button" class="hb" data-col="${j}" tabindex="-1" aria-label="Columna 0,0${j}">0,0${j}</button></th>`;
+  h += `</tr></thead><tbody>`;
+  TABLA.forEach((row, i) => {
+    h += `<tr data-r="${i}"><th scope="row"><button type="button" class="hb" data-row="${i}" tabindex="-1" aria-label="Fila ${num(i / 10, 1)}">${(i / 10).toFixed(1).replace(".", ",")}</button></th>`;
+    row.forEach((v, j) => {
+      const er = (i === 7 && j === 9);
+      h += `<td data-r="${i}" data-c="${j}"${er ? ' class="errata" title="En la cartilla impresa figura 0,7652 (errata). Valor correcto: 0,7852."' : ""}>${v.toFixed(4).replace(".", ",")}</td>`;
+    });
+    h += `</tr>`;
+  });
+  h += `</tbody>`;
+  $("#zt").innerHTML = h;
+}
+function setSel(r, c, scroll) {
+  sel.r = r; sel.c = c;
+  $$("#zt tr.rsel").forEach(e => e.classList.remove("rsel"));
+  $$("#zt .csel").forEach(e => e.classList.remove("csel"));
+  $$("#zt td.cell").forEach(e => e.classList.remove("cell"));
+  if (r != null) $(`#zt tbody tr[data-r="${r}"]`).classList.add("rsel");
+  if (c != null) { $$(`#zt [data-c="${c}"]`).forEach(e => e.classList.add("csel")); }
+  if (r != null && c != null) {
+    const td = $(`#zt td[data-r="${r}"][data-c="${c}"]`); td.classList.add("cell");
+    if (scroll) td.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }
+  renderReadout();
+}
+function renderReadout() {
+  const L = sel.letra, main = $("#roMain"), sub = $("#roSub"), rel = $("#roRel");
+  const both = sel.r != null && sel.c != null;
+  main.classList.toggle("empty", !both);
+  $("#btnPin").disabled = !both;
+  if (both) {
+    const z = sel.r / 10 + sel.c / 100, p = TABLA[sel.r][sel.c];
+    main.textContent = `P(${L} < ${zf(z)}) = ${prob(p)}`;
+    sub.textContent = `Fila ${(sel.r / 10).toFixed(1).replace(".", ",")} · columna 0,0${sel.c} · ${L} ∼ N(0 ; 1)`;
+    $("#roCurve").innerHTML = curvaSVG({ media: 0, desvio: 1, zona: "menor", a: z }, { w: 132, h: 66, mini: true }).svg;
+    const q = round4(1 - p);
+    rel.innerHTML = `<span>P(${L} > ${zf(z)}) = 1 − ${prob(p)} = ${prob(q)}</span>` +
+      (z > 0 ? `<span>P(${L} < ${zf(-z)}) = P(${L} > ${zf(z)}) = ${prob(q)}</span><span>P(${zf(-z)} < ${L} < ${zf(z)}) = ${prob(p)} − ${prob(q)} = ${prob(round4(p - q))}</span>` : `<span>0 es la media: deja 0,5000 a cada lado.</span>`);
+    rel.hidden = !sel.rel;
+    $("#roBarTxt").textContent = main.textContent;
+    $("#roBar").classList.add("on"); document.body.classList.add("has-bar");
+  } else {
+    rel.hidden = true;
+    $("#roCurve").innerHTML = curvaSVG({ media: 0, desvio: 1, zona: null }, { w: 132, h: 66, mini: true }).svg;
+    if (sel.r != null) {
+      main.textContent = `Fila ${(sel.r / 10).toFixed(1).replace(".", ",")}: x₀ de ${zf(sel.r / 10)} a ${zf(sel.r / 10 + 0.09)}. Elegí una columna.`;
+    } else if (sel.c != null) {
+      main.textContent = `Columna 0,0${sel.c}: segundo decimal de x₀. Elegí una fila.`;
+    } else main.textContent = "Seleccioná una celda, o una fila y una columna.";
+    sub.textContent = `${L} ∼ N(0 ; 1) · la tabla da P(${L} ≤ x₀)`;
+    $("#roBar").classList.remove("on"); document.body.classList.remove("has-bar");
+  }
+  $$("[data-letter]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.letter === L)));
+  renderPins();
+}
+function renderPins() {
+  const L = sel.letra;
+  $("#pins").innerHTML = pins.map((p, i) => `<span class="pin"><button type="button" class="to-calc" data-i="${i}" title="Usar ${prob(p.p)} en la calculadora">P(${L}&lt;${zf(p.z)}) = ${prob(p.p)}</button><button type="button" class="x" data-x="${i}" aria-label="Quitar lectura">×</button></span>`).join("");
+}
+function initTabla() {
+  buildTabla();
+  const zt = $("#zt");
+  zt.addEventListener("click", e => {
+    const td = e.target.closest("td[data-r]");
+    if (td) { const r = +td.dataset.r, c = +td.dataset.c; if (sel.r === r && sel.c === c) setSel(null, null); else setSel(r, c); zt.focus({ preventScroll: true }); return; }
+    const rb = e.target.closest("[data-row]");
+    if (rb) { const r = +rb.dataset.row; setSel(sel.r === r ? null : r, sel.c); return; }
+    const cb = e.target.closest("[data-col]");
+    if (cb) { const c = +cb.dataset.col; setSel(sel.r, sel.c === c ? null : c); }
+  });
+  zt.addEventListener("keydown", e => {
+    const k = e.key; if (!["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Escape"].includes(k)) return;
+    e.preventDefault();
+    if (k === "Escape") return setSel(null, null);
+    let r = sel.r ?? 0, c = sel.c ?? 0;
+    if (sel.r != null && sel.c != null) {
+      if (k === "ArrowUp") r = Math.max(0, r - 1); if (k === "ArrowDown") r = Math.min(TABLA.length - 1, r + 1);
+      if (k === "ArrowLeft") c = Math.max(0, c - 1); if (k === "ArrowRight") c = Math.min(9, c + 1);
+    }
+    setSel(r, c, true);
+  });
+  $$("[data-letter]").forEach(b => b.addEventListener("click", () => { sel.letra = b.dataset.letter; store.set("nrm.letra", sel.letra); renderReadout(); }));
+  $("#chkRel").addEventListener("change", e => { sel.rel = e.target.checked; renderReadout(); });
+  $("#clearSel").addEventListener("click", () => { setSel(null, null); $$("#zt td.found").forEach(t => t.classList.remove("found")); $("#findMsg").hidden = true; });
+  $("#btnPin").addEventListener("click", () => {
+    if (sel.r == null || sel.c == null) return;
+    const z = round4(sel.r / 10 + sel.c / 100), p = TABLA[sel.r][sel.c];
+    pins = pins.filter(x => x.z !== z); pins.unshift({ z, p }); pins = pins.slice(0, 8);
+    store.set("nrm.pins", pins); renderPins();
+  });
+  $("#pins").addEventListener("click", e => {
+    const x = e.target.closest("[data-x]");
+    if (x) { pins.splice(+x.dataset.x, 1); store.set("nrm.pins", pins); renderPins(); return; }
+    const t = e.target.closest("[data-i]");
+    if (t) { calcInsert(prob(pins[+t.dataset.i].p)); showTool("calc"); toast("Valor agregado a la calculadora"); }
+  });
+  $("#findForm").addEventListener("submit", e => {
+    e.preventDefault();
+    const msg = $("#findMsg"); msg.hidden = false;
+    $$("#zt td.found").forEach(t => t.classList.remove("found"));
+    const p = parseNum($("#findIn").value);
+    if (isNaN(p) || p <= 0 || p >= 1) { msg.textContent = "Escribí una probabilidad entre 0 y 1, por ejemplo 0,975."; return; }
+    if (p < 0.5) { msg.textContent = `El cuerpo de la tabla va de 0,5000 a 0,9999. Para ${prob(p)} buscá su complemento, ${prob(round4(1 - p))}, y usá el z con signo negativo.`; return; }
+    let best = Infinity, cells = [];
+    TABLA.forEach((row, i) => row.forEach((v, j) => {
+      const d = Math.round(Math.abs(v - p) * 1e5);
+      if (d < best) { best = d; cells = [[i, j]]; } else if (d === best) cells.push([i, j]);
+    }));
+    cells.forEach(([i, j]) => $(`#zt td[data-r="${i}"][data-c="${j}"]`).classList.add("found"));
+    const [r0, c0] = cells[0];
+    setSel(r0, c0, true);
+    const zs = cells.map(([i, j]) => zf(i / 10 + j / 100));
+    const exact = best === 0;
+    msg.textContent = (exact ? `${prob(p)} aparece en la tabla` : `El valor más cercano a ${prob(p)} es ${prob(TABLA[r0][c0])}`) +
+      (cells.length > 1 ? ` (en ${cells.length} celdas: x₀ = ${zs.join(", ")}).` : ` → x₀ = ${zs[0]}.`);
+  });
+  $("#roBar").addEventListener("click", () => { showTool("tabla"); $("#readout").scrollIntoView({ behavior: "smooth", block: "start" }); });
+  renderReadout();
+}
+
+/* =========================================================
+   CALCULADORA
+   ========================================================= */
+let ans = store.get("nrm.ans", null), hist = store.get("nrm.hist", []);
+function evalExpr(src) {
+  let s = src.replace(/\s+/g, "").replace(/ans/gi, "A").replace(/sqrt/gi, "r").replace(/√/g, "r")
+    .replace(/[×·*]/g, "*").replace(/[÷:/]/g, "/").replace(/[−–]/g, "-").replace(/,/g, ".").replace(/²/g, "^2");
+  if (!s) throw new Error("Escribí una expresión.");
+  let i = 0;
+  const peek = () => s[i];
+  const startsFactor = c => c === "(" || c === "r" || c === "A" || /[\d.]/.test(c || "");
+  function expr() { let v = term(); while (peek() === "+" || peek() === "-") { const o = s[i++]; const t = term(); v = o === "+" ? v + t : v - t; } return v; }
+  function term() {
+    let v = unary();
+    while (peek() === "*" || peek() === "/" || startsFactor(peek())) {
+      let o = "*"; if (peek() === "*" || peek() === "/") o = s[i++];
+      const t = unary();
+      if (o === "/" && t === 0) throw new Error("División por cero.");
+      v = o === "*" ? v * t : v / t;
+    }
+    return v;
+  }
+  function unary() { if (peek() === "-") { i++; return -unary(); } if (peek() === "+") { i++; return unary(); } return power(); }
+  function power() { const b = atom(); if (peek() === "^") { i++; return Math.pow(b, unary()); } return b; }
+  function atom() {
+    const c = peek();
+    if (c === "(") { i++; const v = expr(); if (peek() !== ")") throw new Error("Falta cerrar un paréntesis."); i++; return v; }
+    if (c === "r") { i++; const v = atom(); if (v < 0) throw new Error("Raíz de un número negativo."); return Math.sqrt(v); }
+    if (c === "A") { i++; if (ans == null) throw new Error("Todavía no hay un resultado anterior (Ans)."); return ans; }
+    const m = /^(\d+\.?\d*|\.\d+)/.exec(s.slice(i));
+    if (!m) throw new Error(c ? `No entiendo «${c.replace("r", "√").replace("A", "Ans")}» en esa posición.` : "La expresión está incompleta.");
+    i += m[0].length; return parseFloat(m[0]);
+  }
+  const v = expr();
+  if (i < s.length) throw new Error(s[i] === ")" ? "Sobra un paréntesis de cierre." : `No entiendo «${s.slice(i)}».`);
+  if (!isFinite(v)) throw new Error("El resultado no es un número finito.");
+  return v;
+}
+function calcPreview() {
+  const inp = $("#calcIn"), res = $("#calcRes");
+  if (!inp.value.trim()) { res.className = "calc-res preview"; res.textContent = ans != null ? `Ans = ${num(ans, 6)}` : "0"; return; }
+  try { const v = evalExpr(inp.value); res.className = "calc-res preview"; res.textContent = "= " + num(v, 6); }
+  catch (e) { res.className = "calc-res preview"; res.textContent = "…"; }
+}
+function calcEquals() {
+  const inp = $("#calcIn"), res = $("#calcRes");
+  try {
+    const v = evalExpr(inp.value);
+    ans = v; store.set("nrm.ans", ans);
+    hist.unshift({ e: inp.value.trim(), v }); hist = hist.slice(0, 12); store.set("nrm.hist", hist);
+    res.className = "calc-res"; res.textContent = "= " + num(v, 6);
+    renderHist();
+    inp.value = ""; inp.dataset.done = "1";
+  } catch (e) { res.className = "calc-res err"; res.textContent = e.message; }
+}
+function calcInsert(t) {
+  const inp = $("#calcIn");
+  if (inp.dataset.done === "1") { inp.dataset.done = ""; if (/^[+\-−×÷^*/²]/.test(t.trim())) t = "Ans" + t; }
+  const st = inp.selectionStart ?? inp.value.length, en = inp.selectionEnd ?? inp.value.length;
+  inp.setRangeText(t, st, en, "end");
+  calcPreview();
+}
+function renderHist() {
+  $("#hist").innerHTML = hist.length ? hist.map((h, i) => `<button type="button" data-h="${i}" title="Usar ${num(h.v, 6)}"><span class="h-e">${esc(h.e)}</span><span>= ${num(h.v, 6)}</span></button>`).join("")
+    : `<span class="muted" style="font-family:var(--font-body)">Todavía no hiciste cuentas.</span>`;
+}
+function initCalc() {
+  const keys = [
+    ["C", "fn op", "Borrar todo"], ["⌫", "fn op", "Borrar un carácter"], ["(", "op"], [")", "op"], ["÷", "op"],
+    ["7"], ["8"], ["9"], ["√", "op"], ["×", "op"],
+    ["4"], ["5"], ["6"], ["x²", "fn op", "Al cuadrado"], ["−", "op"],
+    ["1"], ["2"], ["3"], ["^", "op", "Potencia"], ["+", "op"],
+    ["0"], [","], ["1 −", "fn op", "Uno menos…"], ["Ans", "fn op", "Resultado anterior"], ["=", "eq"]
+  ];
+  $("#keys").innerHTML = keys.map(([k, c, t]) => `<button type="button" class="${c || ""}" data-k="${esc(k)}"${t ? ` aria-label="${t}" title="${t}"` : ""}>${esc(k)}</button>`).join("");
+  $("#keys").addEventListener("click", e => {
+    const b = e.target.closest("[data-k]"); if (!b) return;
+    const k = b.dataset.k, inp = $("#calcIn");
+    if (k === "=") return calcEquals();
+    if (k === "C") { inp.value = ""; inp.dataset.done = ""; calcPreview(); return; }
+    if (k === "⌫") { const st = inp.selectionStart ?? inp.value.length, en = inp.selectionEnd ?? st; if (st === en && st > 0) inp.setRangeText("", st - 1, st, "end"); else inp.setRangeText("", st, en, "end"); calcPreview(); return; }
+    const map = { "x²": "²", "√": "√(", "1 −": "1 − ", "÷": " ÷ ", "×": " × ", "−": " − ", "+": " + " };
+    calcInsert(map[k] ?? k);
+  });
+  $("#calcIn").addEventListener("input", () => { $("#calcIn").dataset.done = ""; calcPreview(); });
+  $("#calcIn").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); calcEquals(); } });
+  $("#hist").addEventListener("click", e => { const b = e.target.closest("[data-h]"); if (b) calcInsert(num(hist[+b.dataset.h].v, 6)); });
+  renderHist(); calcPreview();
+}
+function showTool(t) {
+  const tabla = t === "tabla";
+  $("#pTabla").hidden = !tabla; $("#pCalc").hidden = tabla;
+  $("#tTabla").setAttribute("aria-pressed", String(tabla)); $("#tCalc").setAttribute("aria-pressed", String(!tabla));
+  store.set("nrm.tool", t);
+}
+
+/* =========================================================
+   BANCO + PRÁCTICA
+   ========================================================= */
+const ZONAS = ["menor", "mayor", "entre", "fuera"];
+function normalizarGrafico(g, where, errs) {
+  if (g == null) return undefined;
+  if (typeof g !== "object") { errs.push(`${where}: el gráfico tiene que ser un objeto.`); return undefined; }
+  const out = { variable: String(g.variable || "X").slice(0, 2), media: parseNum(g.media ?? 0), desvio: parseNum(g.desvio ?? 1), zona: g.zona, a: parseNum(g.a) };
+  if (g.b != null) out.b = parseNum(g.b);
+  if (!ZONAS.includes(out.zona)) errs.push(`${where}: "zona" tiene que ser menor, mayor, entre o fuera.`);
+  if (isNaN(out.media) || isNaN(out.desvio) || out.desvio <= 0) errs.push(`${where}: "media" y "desvio" tienen que ser números (desvio > 0).`);
+  if (isNaN(out.a)) errs.push(`${where}: falta el borde "a".`);
+  if ((out.zona === "entre" || out.zona === "fuera") && (out.b == null || isNaN(out.b) || out.b <= out.a)) errs.push(`${where}: en "${out.zona}" hace falta "b" mayor que "a".`);
+  return out;
+}
+function validarBanco(obj) {
+  const errs = [];
+  let lista;
+  if (Array.isArray(obj)) lista = obj;
+  else if (obj && Array.isArray(obj.ejercicios)) lista = obj.ejercicios;
+  else { errs.push('No encontré la lista "ejercicios". El archivo tiene que ser { "ejercicios": [ … ] }.'); return { errs, ejercicios: [] }; }
+  const ids = new Set();
+  const ejercicios = lista.map((e, i) => {
+    const w = `Ejercicio ${i + 1}${e && e.id ? ` (${e.id})` : ""}`;
+    if (!e || typeof e !== "object") { errs.push(`${w}: no es un objeto.`); return null; }
+    if (!e.id) errs.push(`${w}: falta "id".`);
+    else if (ids.has(e.id)) errs.push(`${w}: el id "${e.id}" está repetido en el archivo.`);
+    ids.add(e.id);
+    if (!e.enunciado) errs.push(`${w}: falta "enunciado".`);
+    if (!Array.isArray(e.preguntas) || !e.preguntas.length) { errs.push(`${w}: "preguntas" tiene que ser una lista con al menos una pregunta.`); return null; }
+    const preguntas = e.preguntas.map((q, j) => {
+      const wq = `${w}, pregunta ${j + 1}`;
+      if (!q || typeof q !== "object") { errs.push(`${wq}: no es un objeto.`); return null; }
+      if (!q.enunciado) errs.push(`${wq}: falta "enunciado".`);
+      let opciones = Array.isArray(q.opciones) ? q.opciones.map((o, k) => typeof o === "string" ? { id: String.fromCharCode(65 + k), texto: o } : { id: String(o && o.id != null ? o.id : String.fromCharCode(65 + k)), texto: String(o && o.texto != null ? o.texto : "") }) : [];
+      if (opciones.length < 2) errs.push(`${wq}: necesita al menos 2 opciones.`);
+      const oids = opciones.map(o => o.id);
+      if (new Set(oids).size !== oids.length) errs.push(`${wq}: hay opciones con el mismo id.`);
+      if (!oids.includes(String(q.correcta))) errs.push(`${wq}: "correcta" (${JSON.stringify(q.correcta)}) no coincide con ningún id de opción.`);
+      let resolucion = q.resolucion == null ? [] : Array.isArray(q.resolucion) ? q.resolucion.map(String) : [String(q.resolucion)];
+      return {
+        id: String(q.id ?? String.fromCharCode(97 + j)), enunciado: String(q.enunciado || ""), opciones, correcta: String(q.correcta),
+        pista: q.pista ? String(q.pista) : undefined, resolucion,
+        grafico: normalizarGrafico(q.grafico, `${wq}, grafico`, errs), graficoResolucion: normalizarGrafico(q.graficoResolucion, `${wq}, graficoResolucion`, errs)
+      };
+    });
+    return { id: String(e.id), fuente: e.fuente ? String(e.fuente) : String(e.id), temas: Array.isArray(e.temas) ? e.temas.map(String) : [], enunciado: String(e.enunciado || ""), grafico: normalizarGrafico(e.grafico, `${w}, grafico`, errs), preguntas };
+  });
+  return { errs, ejercicios };
+}
+let banco = (() => { const b = store.get("nrm.banco", null); if (b) { const r = validarBanco(b); if (!r.errs.length) return r.ejercicios; } return validarBanco(BANCO_ORIGINAL).ejercicios; })();
+let progreso = store.get("nrm.progreso", {});
+let actual = store.get("nrm.actual", 0);
+let filtro = null;
+const abiertos = {}; // pistas / resoluciones abiertas
+function guardarBanco() { store.set("nrm.banco", { formato: "practica-normal", version: 1, ejercicios: banco }); }
+function exportable(lista) {
+  return {
+    formato: "practica-normal", version: 1,
+    titulo: BANCO_ORIGINAL.titulo, descripcion: BANCO_ORIGINAL.descripcion,
+    ejercicios: lista.map(e => {
+      const o = { id: e.id, fuente: e.fuente, temas: e.temas, enunciado: e.enunciado };
+      if (e.grafico) o.grafico = e.grafico;
+      o.preguntas = e.preguntas.map(q => {
+        const p = { id: q.id, enunciado: q.enunciado };
+        if (q.grafico) p.grafico = q.grafico;
+        p.opciones = q.opciones; p.correcta = q.correcta;
+        if (q.pista) p.pista = q.pista;
+        if (q.resolucion && q.resolucion.length) p.resolucion = q.resolucion;
+        if (q.graficoResolucion) p.graficoResolucion = q.graficoResolucion;
+        return p;
+      });
+      return o;
+    })
+  };
+}
+const PLANTILLA = {
+  formato: "practica-normal", version: 1, titulo: "Mis ejercicios",
+  ejercicios: [{
+    id: "nuevo-1", fuente: "Práctico 4 · Ej. 1", temas: ["cola derecha", "hallar σ"],
+    enunciado: "El tiempo T (en minutos) que tarda un trámite es Normal con media 30 y desvío 4.",
+    preguntas: [
+      {
+        id: "a", enunciado: "La probabilidad de que un trámite tarde más de 36 minutos es:",
+        opciones: [{ id: "A", texto: "0,0668" }, { id: "B", texto: "0,9332" }, { id: "C", texto: "0,4332" }],
+        correcta: "A", pista: "Estandarizá y usá el complemento.",
+        resolucion: ["z = (36 − 30) / 4 = 1,5.", "P(T > 36) = 1 − P(Z < 1,5) = 1 − 0,9332 = 0,0668."],
+        graficoResolucion: { variable: "T", media: 30, desvio: 4, zona: "mayor", a: 36 }
+      },
+      {
+        id: "b", enunciado: "¿Qué notación corresponde al área sombreada?",
+        grafico: { variable: "T", media: 30, desvio: 4, zona: "entre", a: 26, b: 34 },
+        opciones: ["P(26 < T < 34)", "P(T < 34)", "P(T > 26)"],
+        correcta: "A", resolucion: ["Es el área entre 26 y 34."]
+      }
+    ]
+  }]
+};
+function qState(eid, qid) { return (progreso[eid] || {})[qid]; }
+function setQState(eid, qid, v) { progreso[eid] = progreso[eid] || {}; if (v == null) delete progreso[eid][qid]; else progreso[eid][qid] = v; store.set("nrm.progreso", progreso); }
+function listaFiltrada() { return banco.map((e, i) => ({ e, i })).filter(({ e }) => !filtro || e.temas.includes(filtro)); }
+
+function renderStats() {
+  let total = 0, resp = 0, ok = 0;
+  banco.forEach(e => e.preguntas.forEach(q => { total++; const s = qState(e.id, q.id); if (s) { resp++; if (s.ok) ok++; } }));
+  const pg = total ? ok / total * 100 : 0, pb = total ? (resp - ok) / total * 100 : 0;
+  $("#stats").innerHTML = `
+    <div class="stat"><b>${banco.length}</b><span>ejercicios</span></div>
+    <div class="stat"><b>${resp}/${total}</b><span>preguntas respondidas</span></div>
+    <div class="stat"><b style="color:var(--good)">${ok}</b><span>correctas</span></div>
+    <div class="stat"><b style="color:var(--bad)">${resp - ok}</b><span>a revisar</span></div>
+    <div class="bar" aria-hidden="true"><i class="g" style="width:${pg}%"></i><i class="b" style="width:${pb}%"></i></div>
+    <button type="button" class="btn ghost" id="resetProg">Reiniciar progreso</button>`;
+}
+function renderPicker() {
+  const temas = [...new Set(banco.flatMap(e => e.temas))];
+  $("#filters").innerHTML = `<button type="button" class="chip" data-t="" aria-pressed="${!filtro}">Todos los temas</button>` +
+    temas.map(t => `<button type="button" class="chip" data-t="${esc(t)}" aria-pressed="${filtro === t}">${esc(t)}</button>`).join("");
+  $("#exlist").innerHTML = listaFiltrada().map(({ e, i }) => `<button type="button" class="exbtn" data-ex="${i}" aria-current="${i === actual}">
+      <span class="t">${esc(e.fuente)}</span>
+      <span class="dots">${e.preguntas.map(q => { const s = qState(e.id, q.id); return `<i class="${s ? (s.ok ? "ok" : "no") : ""}"></i>`; }).join("")}</span></button>`).join("") ||
+    `<span class="muted">No hay ejercicios con ese tema.</span>`;
+  const cur = $("#exlist [aria-current='true']"); if (cur) cur.scrollIntoView({ block: "nearest", inline: "nearest" });
+}
+function renderEx() {
+  const e = banco[actual];
+  if (!e) { $("#ex").innerHTML = `<p class="muted">El banco está vacío. Cargá ejercicios desde «Banco y JSON».</p>`; return; }
+  const lista = listaFiltrada(), pos = lista.findIndex(x => x.i === actual);
+  let h = `<div class="ex-head"><div><div class="eyebrow">Ejercicio ${pos >= 0 ? pos + 1 : actual + 1} de ${pos >= 0 ? lista.length : banco.length}</div><h2>${esc(e.fuente)}</h2>
+    <div class="tags">${e.temas.map(t => `<span class="tag">${esc(t)}</span>`).join("")}</div></div>
+    <button type="button" class="btn ghost" data-act="reset-ex">Reintentar ejercicio</button></div>
+    <p class="statement">${esc(e.enunciado)}</p>`;
+  if (e.grafico) h += `<div class="qgraph">${curvaHTML(e.grafico)}</div>`;
+  e.preguntas.forEach(q => {
+    const s = qState(e.id, q.id), key = e.id + "|" + q.id, ab = abiertos[key] || {};
+    h += `<section class="q" data-q="${esc(q.id)}"><div class="q-text"><span class="qid">${esc(q.id)})</span><p>${esc(q.enunciado)}</p></div>`;
+    if (q.grafico) h += `<div class="qgraph">${curvaHTML(q.grafico)}</div>`;
+    h += `<div class="opts" role="group" aria-label="Opciones">` + q.opciones.map(o => {
+      let cls = "";
+      if (s) { if (o.id === q.correcta) cls = "right"; else if (o.id === s.elegida) cls = "wrong"; }
+      return `<button type="button" class="opt ${cls}" data-o="${esc(o.id)}" ${s ? "disabled" : ""}><span class="ol">${esc(o.id)}</span><span class="ot">${esc(o.texto)}</span></button>`;
+    }).join("") + `</div><div class="q-foot">`;
+    if (s) h += `<span class="fb ${s.ok ? "ok" : "no"}">${s.ok ? "Correcto" : `Incorrecto · la correcta es ${esc(q.correcta)}`}</span>`;
+    if (q.pista && !s) h += `<button type="button" class="btn ghost" data-act="pista">${ab.pista ? "Ocultar pista" : "Pista"}</button>`;
+    if (s && (q.resolucion.length || q.graficoResolucion)) h += `<button type="button" class="btn ghost" data-act="resol">${ab.resol ? "Ocultar resolución" : "Ver resolución"}</button>`;
+    if (s) h += `<button type="button" class="btn ghost" data-act="retry">Reintentar</button>`;
+    h += `</div>`;
+    if (q.pista && ab.pista && !s) h += `<p class="pista">${esc(q.pista)}</p>`;
+    if (s && ab.resol) h += `<div class="resol"><ol>${q.resolucion.map(r => `<li>${esc(r)}</li>`).join("")}</ol>${q.graficoResolucion ? curvaHTML(q.graficoResolucion, 300, 170) : ""}</div>`;
+    h += `</section>`;
+  });
+  const prev = pos > 0 ? lista[pos - 1].i : null, next = pos >= 0 && pos < lista.length - 1 ? lista[pos + 1].i : null;
+  h += `<div class="nav"><button type="button" class="btn" data-go="${prev ?? ""}" ${prev == null ? "disabled" : ""}>← Anterior</button><button type="button" class="btn primary" data-go="${next ?? ""}" ${next == null ? "disabled" : ""}>Siguiente →</button></div>`;
+  $("#ex").innerHTML = h;
+}
+function renderPractica() { if (actual >= banco.length) actual = 0; renderStats(); renderPicker(); renderEx(); }
+function initPractica() {
+  $("#stats").addEventListener("click", e => {
+    if (e.target.id === "resetProg") { progreso = {}; store.set("nrm.progreso", progreso); renderPractica(); toast("Progreso reiniciado"); }
+  });
+  $("#filters").addEventListener("click", e => {
+    const b = e.target.closest("[data-t]"); if (!b) return;
+    filtro = b.dataset.t || null;
+    const l = listaFiltrada(); if (l.length && !l.some(x => x.i === actual)) actual = l[0].i;
+    renderPractica();
+  });
+  $("#exlist").addEventListener("click", e => { const b = e.target.closest("[data-ex]"); if (b) { actual = +b.dataset.ex; store.set("nrm.actual", actual); renderPractica(); $("#ex").scrollIntoView({ block: "nearest" }); } });
+  $("#ex").addEventListener("click", e => {
+    const ex = banco[actual]; if (!ex) return;
+    const go = e.target.closest("[data-go]");
+    if (go && go.dataset.go !== "") { actual = +go.dataset.go; store.set("nrm.actual", actual); renderPractica(); $("#ex").scrollIntoView({ behavior: "smooth", block: "start" }); return; }
+    const sec = e.target.closest("[data-q]");
+    const act = e.target.closest("[data-act]");
+    if (act && act.dataset.act === "reset-ex") { ex.preguntas.forEach(q => { setQState(ex.id, q.id, null); delete abiertos[ex.id + "|" + q.id]; }); renderPractica(); return; }
+    if (!sec) return;
+    const q = ex.preguntas.find(x => x.id === sec.dataset.q); const key = ex.id + "|" + q.id;
+    const opt = e.target.closest("[data-o]");
+    if (opt && !opt.disabled) { setQState(ex.id, q.id, { elegida: opt.dataset.o, ok: opt.dataset.o === q.correcta }); abiertos[key] = {}; renderStats(); renderPicker(); renderEx(); return; }
+    if (act) {
+      const ab = abiertos[key] = abiertos[key] || {};
+      if (act.dataset.act === "pista") ab.pista = !ab.pista;
+      if (act.dataset.act === "resol") ab.resol = !ab.resol;
+      if (act.dataset.act === "retry") { setQState(ex.id, q.id, null); abiertos[key] = {}; renderStats(); renderPicker(); }
+      renderEx();
+      const s2 = $(`#ex [data-q="${CSS.escape(q.id)}"]`); if (s2) s2.scrollIntoView({ block: "nearest" });
+    }
+  });
+  renderPractica();
+}
+
+/* ---------- banco: descargar / cargar ---------- */
+let DL = null;
+try { if (window.claude && typeof window.claude.use === "function") window.claude.use("downloads").then(d => { DL = d; }).catch(() => {}); } catch (e) {}
+async function descargar(nombre, texto) {
+  const msg = $("#dlMsg");
+  if (DL) {
+    try { await DL.save({ filename: nombre, data: texto }); msg.innerHTML = `<span class="k">Listo: ${esc(nombre)}</span>`; return; }
+    catch (e) {
+      const code = e && e.code;
+      if (code === "declined") { msg.innerHTML = `<span class="muted">Descarga cancelada.</span>`; return; }
+      if (code === "rate_limited") { msg.innerHTML = `<span class="e">Ya hay una descarga esperando confirmación. Probá de nuevo en un momento.</span>`; return; }
+    }
+  }
+  try {
+    const url = URL.createObjectURL(new Blob([texto], { type: "application/json" }));
+    const a = document.createElement("a"); a.href = url; a.download = nombre; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 4000);
+    msg.innerHTML = `<span class="muted">Si la descarga no empezó, usá «Copiar JSON del banco» y pegalo en un archivo .json.</span>`;
+  } catch (e) { msg.innerHTML = `<span class="e">No se pudo descargar desde acá. Usá «Copiar JSON del banco».</span>`; }
+}
+let modoCarga = "add", textoArchivo = null;
+function renderBancoInfo() {
+  const nq = banco.reduce((s, e) => s + e.preguntas.length, 0);
+  $("#bankInfo").textContent = `El banco actual tiene ${banco.length} ejercicios y ${nq} preguntas. Los ejercicios que cargues quedan guardados en este navegador.`;
+}
+function initBanco() {
+  $("#tplPre").textContent = JSON.stringify(PLANTILLA, null, 2);
+  renderBancoInfo();
+  $("#dlBank").addEventListener("click", () => descargar("banco-normal.json", JSON.stringify(exportable(banco), null, 2)));
+  $("#dlTpl").addEventListener("click", () => descargar("plantilla-normal.json", JSON.stringify(PLANTILLA, null, 2)));
+  $("#cpBank").addEventListener("click", async () => {
+    const txt = JSON.stringify(exportable(banco), null, 2);
+    try { await navigator.clipboard.writeText(txt); $("#dlMsg").innerHTML = `<span class="k">JSON copiado al portapapeles.</span>`; }
+    catch (e) { const ta = $("#pasteIn"); ta.value = txt; ta.focus(); ta.select(); $("#dlMsg").innerHTML = `<span class="muted">No pude copiar automáticamente: el JSON quedó seleccionado en el cuadro de carga, copialo con Ctrl+C.</span>`; }
+  });
+  $("#resetBank").addEventListener("click", () => {
+    banco = validarBanco(BANCO_ORIGINAL).ejercicios; actual = 0; filtro = null;
+    try { localStorage.removeItem("nrm.banco"); } catch (e) {}
+    renderBancoInfo(); renderPractica(); $("#dlMsg").innerHTML = `<span class="k">Banco original restaurado.</span>`;
+  });
+  $("#modeAdd").addEventListener("click", () => { modoCarga = "add"; $("#modeAdd").setAttribute("aria-pressed", "true"); $("#modeRep").setAttribute("aria-pressed", "false"); });
+  $("#modeRep").addEventListener("click", () => { modoCarga = "rep"; $("#modeRep").setAttribute("aria-pressed", "true"); $("#modeAdd").setAttribute("aria-pressed", "false"); });
+  $("#fileIn").addEventListener("change", async e => {
+    const f = e.target.files[0]; if (!f) return;
+    $("#fileName").textContent = f.name;
+    try { $("#pasteIn").value = await f.text(); } catch (err) { $("#loadMsg").innerHTML = `<span class="e">No pude leer el archivo.</span>`; }
+  });
+  $("#loadBtn").addEventListener("click", () => {
+    const out = $("#loadMsg"), txt = $("#pasteIn").value.trim();
+    if (!txt) { out.innerHTML = `<span class="e">Elegí un archivo o pegá el JSON primero.</span>`; return; }
+    let obj;
+    try { obj = JSON.parse(txt); } catch (e) { out.innerHTML = `<span class="e">El texto no es JSON válido: ${esc(e.message)}. Revisá comas y comillas.</span>`; return; }
+    const r = validarBanco(obj);
+    if (r.errs.length) { out.innerHTML = `<span class="e"><b>No se cargó nada.</b> Hay ${r.errs.length} problema(s):</span>` + r.errs.slice(0, 15).map(x => `<span class="e">• ${esc(x)}</span>`).join("") + (r.errs.length > 15 ? `<span class="e">…y ${r.errs.length - 15} más.</span>` : ""); return; }
+    let nuevos = 0, reemp = 0;
+    if (modoCarga === "rep") { banco = r.ejercicios; nuevos = banco.length; actual = 0; }
+    else r.ejercicios.forEach(e => { const k = banco.findIndex(x => x.id === e.id); if (k >= 0) { banco[k] = e; reemp++; } else { banco.push(e); nuevos++; } });
+    filtro = null; guardarBanco(); renderBancoInfo(); renderPractica();
+    out.innerHTML = `<span class="k">Listo: ${nuevos} ejercicio(s) ${modoCarga === "rep" ? "en el banco nuevo" : "agregados"}${reemp ? `, ${reemp} reemplazado(s) por tener el mismo id` : ""}.</span>`;
+  });
+}
+
+/* =========================================================
+   ZONAS
+   ========================================================= */
+const Z = { v: "T", mu: 150, sg: 10, zona: "mayor", a: 165, b: 170, modo: "explorar", reto: null, puntos: 0, intentos: 0, editNot: false };
+const zOf = x => (x - Z.mu) / Z.sg, xOf = z => Z.mu + Z.sg * z;
+const LABELS = { menor: v => `P(${v} < a)`, mayor: v => `P(${v} > a)`, entre: v => `P(a < ${v} < b)`, fuera: v => `P(${v} < a) + P(${v} > b)` };
+function zonaSeg() {
+  $("#zZona").innerHTML = ZONAS.map(z => `<button type="button" data-zona="${z}" aria-pressed="${Z.zona === z}" class="mono">${esc(LABELS[z](Z.v))}</button>`).join("");
+}
+function cleanX(x) { return +(+x).toPrecision(10); }
+function renderZonas(opts = {}) {
+  const locked = Z.modo === "reto" && Z.reto && Z.reto.tipo === "elegir";
+  const g = { variable: Z.v, media: Z.mu, desvio: Z.sg, zona: Z.zona, a: Z.a, b: Z.b };
+  $("#zSvg").innerHTML = curvaSVG(g, { w: 720, h: 290, interactive: !locked }).svg;
+  $$("#zZona button").forEach(b => { b.setAttribute("aria-pressed", String(b.dataset.zona === Z.zona)); b.disabled = locked; });
+  const two = Z.zona === "entre" || Z.zona === "fuera";
+  $("#zBwrap").hidden = !two;
+  if (!opts.keepA) $("#zA").value = num(Z.a);
+  if (!opts.keepB) $("#zB").value = num(Z.b);
+  $("#zA").disabled = $("#zB").disabled = locked;
+  const enReto = Z.modo === "reto";
+  const notTxt = notacion(g);
+  if (!opts.keepNot) $("#zNot").value = locked ? "?" : notTxt;
+  $("#zNot").readOnly = enReto;
+  $("#zErr").hidden = true; $("#zNot").classList.remove("bad");
+  const za = zOf(Z.a), zb = zOf(Z.b);
+  const std = Z.mu === 0 && Z.sg === 1 && Z.v.toUpperCase() === "Z";
+  const hideMath = enReto;
+  const zsign = z => zf(Math.round(z * 100) / 100);
+  if (std) $("#zStd").textContent = "Ya está estandarizada: Z ∼ N(0 ; 1).";
+  else {
+    const zl = x => `(${num(x)} − ${num(Z.mu)}) / ${num(Z.sg)} = ${zsign(zOf(x))}`;
+    const zg = { media: 0, desvio: 1, zona: Z.zona, a: Math.round(za * 100) / 100, b: Math.round(zb * 100) / 100 };
+    $("#zStd").innerHTML = `${esc(notacion(zg, "Z"))}<br><span class="muted" style="font-size:13px">z = ${esc(zl(Z.a))}${two ? ` · z = ${esc(zl(Z.b))}` : ""}</span>`;
+  }
+  const t = tablaExpr(Z.zona, za, two ? zb : null);
+  $("#zTab").textContent = t.e;
+  $("#zVal").textContent = `${t.n} = ${prob(t.v)}  (${num(t.v * 100, 2)} %)`;
+  $$("#zRead dt, #zRead dd").forEach((el, i) => { if (i >= 2) el.hidden = hideMath; });
+  $$(".zval").forEach(el => el.hidden = hideMath || !$("#zShowVal").checked);
+  $("#zSvg").setAttribute("aria-label", "Curva normal, zona " + notTxt);
+}
+function parseNotacion(str) {
+  const s = str.replace(/\s+/g, "").replace(/≤|<=/g, "<").replace(/≥|>=/g, ">").replace(/[−–]/g, "-").replace(/,/g, ".").replace(/[\[\]]/g, m => m === "[" ? "(" : ")");
+  const N = "(-?\\d*\\.?\\d+)", V = "([A-Za-z])";
+  const R = re => new RegExp("^" + re + "$", "i");
+  let m;
+  const pats = [
+    [`P\\(${V}<${N}\\)`, m => ({ L: [m[1]], zona: "menor", a: m[2] })],
+    [`P\\(${N}>${V}\\)`, m => ({ L: [m[2]], zona: "menor", a: m[1] })],
+    [`P\\(${V}>${N}\\)`, m => ({ L: [m[1]], zona: "mayor", a: m[2] })],
+    [`P\\(${N}<${V}\\)`, m => ({ L: [m[2]], zona: "mayor", a: m[1] })],
+    [`1-P\\(${V}<${N}\\)`, m => ({ L: [m[1]], zona: "mayor", a: m[2] })],
+    [`1-P\\(${V}>${N}\\)`, m => ({ L: [m[1]], zona: "menor", a: m[2] })],
+    [`P\\(${N}<${V}<${N}\\)`, m => ({ L: [m[2]], zona: "entre", a: m[1], b: m[3] })],
+    [`P\\(${V}<${N}\\)\\+P\\(${V}>${N}\\)`, m => ({ L: [m[1], m[3]], zona: "fuera", a: m[2], b: m[4] })],
+    [`P\\(${V}>${N}\\)\\+P\\(${V}<${N}\\)`, m => ({ L: [m[1], m[3]], zona: "fuera", a: m[4], b: m[2] })],
+    [`1-P\\(${N}<${V}<${N}\\)`, m => ({ L: [m[2]], zona: "fuera", a: m[1], b: m[3] })],
+    [`P\\(\\|${V}\\|<${N}\\)`, m => ({ L: [m[1]], zona: "entre", a: "-" + m[2], b: m[2], abs: true })],
+    [`P\\(\\|${V}\\|>${N}\\)`, m => ({ L: [m[1]], zona: "fuera", a: "-" + m[2], b: m[2], abs: true })]
+  ];
+  for (const [re, f] of pats) {
+    m = s.match(R(re)); if (!m) continue;
+    const r = f(m);
+    if (r.L.length > 1 && r.L[0].toUpperCase() !== r.L[1].toUpperCase()) return { err: "Usá la misma variable en las dos partes." };
+    const L = r.L[0].toUpperCase();
+    let a = parseFloat(String(r.a).replace("--", "")), b = r.b != null ? parseFloat(r.b) : null;
+    if (r.abs && a > 0) a = -a;
+    let enZ;
+    if (L === Z.v.toUpperCase()) enZ = false;
+    else if (L === "Z") enZ = true;
+    else return { err: `Usá la variable ${Z.v}${Z.v.toUpperCase() !== "Z" ? " o Z" : ""}.` };
+    if (r.abs && !enZ && Z.mu !== 0) return { err: `|${Z.v}| mide la distancia a 0, no a la media. Usá Z: P(|Z| < k).` };
+    if (enZ) { a = xOf(a); if (b != null) b = xOf(b); }
+    if (b != null && !(b > a)) return { err: "El primer borde tiene que ser menor que el segundo." };
+    return { zona: r.zona, a: cleanX(a), b: b != null ? cleanX(b) : null };
+  }
+  return { err: "No reconozco esa notación. Probá P(T > 165), P(140 < T < 160), P(Z < −1,5) o P(|Z| > 2)." };
+}
+function setDist(v, mu, sg) {
+  const zaOld = zOf(Z.a), zbOld = zOf(Z.b);
+  Z.v = v; Z.mu = mu; Z.sg = sg;
+  Z.a = cleanX(xOf(Math.round(zaOld * 100) / 100)); Z.b = cleanX(xOf(Math.round(zbOld * 100) / 100));
+  $("#zVar").value = v; $("#zMu").value = num(mu); $("#zSigma").value = num(sg);
+  zonaSeg(); renderZonas();
+}
+function initZonas() {
+  zonaSeg();
+  $("#zZona").addEventListener("click", e => {
+    const b = e.target.closest("[data-zona]"); if (!b || b.disabled) return;
+    const nz = b.dataset.zona;
+    if ((nz === "entre" || nz === "fuera") && !(Z.b > Z.a)) Z.b = cleanX(Math.min(xOf(3.5), Z.a + Z.sg));
+    if ((nz === "entre" || nz === "fuera") && !(Z.b > Z.a)) Z.a = cleanX(Z.b - Z.sg);
+    Z.zona = nz; renderZonas();
+  });
+  $("#zPreset").addEventListener("change", e => {
+    if (e.target.value === "custom") { $("#zMu").focus(); return; }
+    const [v, mu, sg] = e.target.value.split("|"); setDist(v, +mu, +sg);
+  });
+  const paramChange = () => {
+    const v = ($("#zVar").value.trim() || "X").slice(0, 2), mu = parseNum($("#zMu").value), sg = parseNum($("#zSigma").value);
+    if (isNaN(mu) || isNaN(sg) || sg <= 0) return;
+    $("#zPreset").value = [...$("#zPreset").options].some(o => o.value === `${v}|${mu}|${sg}`) ? `${v}|${mu}|${sg}` : "custom";
+    const zaOld = zOf(Z.a), zbOld = zOf(Z.b);
+    Z.v = v; Z.mu = mu; Z.sg = sg; Z.a = cleanX(xOf(zaOld)); Z.b = cleanX(xOf(zbOld));
+    zonaSeg(); renderZonas();
+  };
+  ["#zVar", "#zMu", "#zSigma"].forEach(s => $(s).addEventListener("change", paramChange));
+  const boundIn = (key) => () => {
+    const x = parseNum($(key === "a" ? "#zA" : "#zB").value); if (isNaN(x)) return;
+    if (key === "a") { Z.a = x; if ((Z.zona === "entre" || Z.zona === "fuera") && Z.b <= Z.a) Z.b = cleanX(Z.a + Z.sg * 0.5); }
+    else { if (x <= Z.a) return; Z.b = x; }
+    renderZonas({ [key === "a" ? "keepA" : "keepB"]: true });
+  };
+  $("#zA").addEventListener("input", boundIn("a")); $("#zB").addEventListener("input", boundIn("b"));
+  $("#zA").addEventListener("blur", () => renderZonas()); $("#zB").addEventListener("blur", () => renderZonas());
+  $("#zShowVal").addEventListener("change", () => renderZonas());
+  $("#zNot").addEventListener("input", () => {
+    if (Z.modo === "reto") return;
+    const r = parseNotacion($("#zNot").value);
+    if (r.err) { $("#zErr").textContent = r.err; $("#zErr").hidden = false; $("#zNot").classList.add("bad"); return; }
+    Z.zona = r.zona; Z.a = r.a; if (r.b != null) Z.b = r.b;
+    renderZonas({ keepNot: true });
+  });
+  $("#zNot").addEventListener("blur", () => { if (Z.modo !== "reto") renderZonas(); });
+
+  // arrastre
+  const svg = $("#zSvg");
+  let drag = null;
+  const zFromEvent = ev => {
+    const r = svg.getBoundingClientRect();
+    const px = (ev.clientX - r.left) / r.width * 720;
+    const pl = 18, pr = 18;
+    const z = ZMIN + (px - pl) / (720 - pl - pr) * (ZMAX - ZMIN);
+    return Math.max(-3.5, Math.min(3.5, Math.round(z * 100) / 100));
+  };
+  svg.addEventListener("pointerdown", ev => {
+    if (Z.modo === "reto" && Z.reto && Z.reto.tipo === "elegir") return;
+    const z = zFromEvent(ev);
+    let h = ev.target.dataset && ev.target.dataset.h;
+    if (!h) {
+      const two = Z.zona === "entre" || Z.zona === "fuera";
+      h = two && Math.abs(z - zOf(Z.b)) < Math.abs(z - zOf(Z.a)) ? "b" : "a";
+    }
+    drag = h; svg.setPointerCapture(ev.pointerId); moveTo(z); ev.preventDefault();
+  });
+  svg.addEventListener("pointermove", ev => { if (drag) moveTo(zFromEvent(ev)); });
+  const end = () => { drag = null; };
+  svg.addEventListener("pointerup", end); svg.addEventListener("pointercancel", end);
+  function moveTo(z) {
+    const two = Z.zona === "entre" || Z.zona === "fuera";
+    if (drag === "a") { if (two) z = Math.min(z, Math.round(zOf(Z.b) * 100) / 100 - 0.01); Z.a = cleanX(xOf(z)); }
+    else { z = Math.max(z, Math.round(zOf(Z.a) * 100) / 100 + 0.01); Z.b = cleanX(xOf(z)); }
+    renderZonas();
+  }
+
+  // modos
+  $("#mExplorar").addEventListener("click", () => setModo("explorar"));
+  $("#mReto").addEventListener("click", () => setModo("reto"));
+  $("#retoBox").addEventListener("click", e => {
+    const b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.act === "nuevo") return nuevoReto();
+    if (b.dataset.act === "check") return checkConstruir();
+    if (b.dataset.pick != null) return checkElegir(+b.dataset.pick);
+  });
+  renderZonas();
+}
+function setModo(m) {
+  Z.modo = m;
+  $("#mExplorar").setAttribute("aria-pressed", String(m === "explorar")); $("#mReto").setAttribute("aria-pressed", String(m === "reto"));
+  $("#retoBox").hidden = m !== "reto"; $("#zParams").hidden = m === "reto"; $("#zHelp").hidden = m === "reto";
+  if (m === "reto") nuevoReto(); else { Z.reto = null; setDist(Z.v, Z.mu, Z.sg); const pv = `${Z.v}|${Z.mu}|${Z.sg}`; $("#zPreset").value = [...$("#zPreset").options].some(o => o.value === pv) ? pv : "custom"; }
+}
+const DISTS = [["Z", 0, 1], ["Z", 0, 1], ["T", 150, 10], ["T", 200, 40], ["X", 77, 20], ["X", 60, 10], ["X", 55, 5]];
+const rnd = a => a[Math.floor(Math.random() * a.length)];
+function nuevoReto() {
+  const [v, mu, sg] = rnd(DISTS);
+  Z.v = v; Z.mu = mu; Z.sg = sg; zonaSeg();
+  const ks = [-2.5, -2, -1.5, -1.25, -1, -0.75, -0.5, -0.25, 0.25, 0.5, 0.75, 1, 1.25, 1.5, 2, 2.5];
+  const zona = rnd(ZONAS);
+  let ka = rnd(ks), kb = rnd(ks);
+  if (ka > kb) [ka, kb] = [kb, ka];
+  if (ka === kb) kb = ka + 0.75;
+  const t = { variable: v, media: mu, desvio: sg, zona, a: cleanX(mu + ka * sg), b: cleanX(mu + kb * sg) };
+  const tipo = Math.random() < 0.5 ? "elegir" : "construir";
+  Z.reto = { tipo, t, hecho: false };
+  if (tipo === "elegir") {
+    Z.zona = t.zona; Z.a = t.a; Z.b = t.b;
+    const mir = x => cleanX(2 * mu - x);
+    const cand = [];
+    const add = g => { const n = notacion(g); if (!cand.some(c => c.n === n)) cand.push({ n, g }); };
+    add(t);
+    const alt = {
+      menor: [{ zona: "mayor", a: t.a }, { zona: "menor", a: mir(t.a) }, { zona: "mayor", a: mir(t.a) }],
+      mayor: [{ zona: "menor", a: t.a }, { zona: "mayor", a: mir(t.a) }, { zona: "menor", a: mir(t.a) }],
+      entre: [{ zona: "fuera", a: t.a, b: t.b }, { zona: "menor", a: t.b }, { zona: "mayor", a: t.a }, { zona: "entre", a: mir(t.b), b: mir(t.a) }],
+      fuera: [{ zona: "entre", a: t.a, b: t.b }, { zona: "menor", a: t.a }, { zona: "mayor", a: t.b }]
+    }[zona];
+    alt.forEach(x => add(Object.assign({ variable: v, media: mu, desvio: sg }, x)));
+    const opts = cand.slice(0, 4);
+    for (let i = opts.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [opts[i], opts[j]] = [opts[j], opts[i]]; }
+    Z.reto.opts = opts;
+  } else {
+    Z.zona = "menor"; Z.a = mu; Z.b = cleanX(mu + sg);
+  }
+  renderReto(); renderZonas();
+}
+function renderReto() {
+  const R = Z.reto, box = $("#retoBox");
+  const score = `<span class="muted" style="font-size:13px">Aciertos: ${Z.puntos} de ${Z.intentos}</span>`;
+  const dist = `${esc(R.t.variable)} ∼ N(${num(R.t.media)} ; ${num(R.t.desvio)})`;
+  if (R.tipo === "elegir") {
+    box.innerHTML = `<p class="reto-prompt">${dist}. ¿Qué notación corresponde al área sombreada?</p>
+      <div class="reto-opts">${R.opts.map((o, i) => {
+        let cls = ""; if (R.hecho) { if (o.n === notacion(R.t)) cls = "right"; else if (i === R.elegida) cls = "wrong"; }
+        return `<button type="button" class="opt ${cls}" data-pick="${i}" ${R.hecho ? "disabled" : ""}><span class="ol">${String.fromCharCode(65 + i)}</span><span class="ot">${esc(o.n)}</span></button>`;
+      }).join("")}</div>
+      <div class="q-foot">${R.hecho ? `<span class="fb ${R.ok ? "ok" : "no"}">${R.ok ? "Correcto" : "Incorrecto"}</span>` : ""}<button type="button" class="btn primary" data-act="nuevo">Nuevo reto</button>${score}</div>`;
+  } else {
+    box.innerHTML = `<p class="reto-prompt">${dist}. Sombreá la zona de <span class="mono">${esc(notacion(R.t))}</span>: elegí el tipo de zona y arrastrá los bordes.</p>
+      <div class="q-foot">${R.hecho ? `<span class="fb ${R.ok ? "ok" : "no"}">${R.ok ? "Correcto" : esc(R.msg)}</span>` : ""}
+      <button type="button" class="btn" data-act="check" ${R.hecho && R.ok ? "disabled" : ""}>Comprobar</button>
+      <button type="button" class="btn primary" data-act="nuevo">Nuevo reto</button>${score}</div>`;
+  }
+}
+function checkElegir(i) {
+  const R = Z.reto; if (R.hecho) return;
+  R.hecho = true; R.elegida = i; R.ok = R.opts[i].n === notacion(R.t);
+  Z.intentos++; if (R.ok) Z.puntos++;
+  renderReto();
+}
+function checkConstruir() {
+  const R = Z.reto, t = R.t;
+  const tol = 0.06, d = (x, y) => Math.abs(zOf(x) - zOf(y));
+  let ok = Z.zona === t.zona && d(Z.a, t.a) <= tol && ((t.zona !== "entre" && t.zona !== "fuera") || d(Z.b, t.b) <= tol);
+  let msg = "";
+  if (!ok) {
+    if (Z.zona !== t.zona) msg = "El tipo de zona no coincide.";
+    else msg = "El tipo de zona está bien; ajustá los bordes.";
+  }
+  if (!R.hecho) { Z.intentos++; if (ok) Z.puntos++; }
+  else if (ok && !R.ok) Z.puntos++;
+  R.hecho = true; R.ok = ok; R.msg = msg;
+  renderReto();
+}
+
+/* =========================================================
+   VISTAS
+   ========================================================= */
+const VISTAS = ["practicar", "zonas", "banco"];
+function route() {
+  const h = location.hash.replace("#", "");
+  const v = VISTAS.includes(h) ? h : "practicar";
+  VISTAS.forEach(x => { $("#v-" + x).hidden = x !== v; });
+  $$(".tabs a").forEach(a => a.setAttribute("aria-current", a.dataset.view === v ? "page" : "false"));
+}
+window.addEventListener("hashchange", route);
+
+initTabla(); initCalc(); initPractica(); initBanco(); initZonas();
+$("#tTabla").addEventListener("click", () => showTool("tabla"));
+$("#tCalc").addEventListener("click", () => showTool("calc"));
+showTool(store.get("nrm.tool", "tabla"));
+setSel(4, 5);
+route();
+</script>
+</body>
+</html>
